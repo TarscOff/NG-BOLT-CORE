@@ -6,6 +6,10 @@ import {
   allowedCharsValidator,
   datePatternFromPlaceholder,
   emailTldValidator,
+  fileAcceptValidator,
+  maxFileSizeValidator,
+  maxFilesValidator,
+  maxTotalSizeValidator,
   minArrayLength,
   optionInListValidator,
   passwordStrengthValidator,
@@ -14,7 +18,6 @@ import {
 
 type ErrMap = FieldConfig['errorMessages'];
 
-/** Merge helper: scalar spread, errorMessages shallow-merge, arrays replaced only if provided. */
 function mergeField<T extends FieldConfig>(base: T, over?: Partial<T>): T {
   if (!over) return base;
 
@@ -23,13 +26,10 @@ function mergeField<T extends FieldConfig>(base: T, over?: Partial<T>): T {
     ...over,
   } as T;
 
-  // errorMessages: merge map
   const baseErr = (base.errorMessages ?? {}) as ErrMap;
   const overErr = (over.errorMessages ?? {}) as ErrMap;
   merged.errorMessages = { ...baseErr, ...overErr };
 
-  // Arrays: only replace if explicitly provided, otherwise keep defaults
-  // (so you can clear by passing [])
   const maybeReplace = (key: keyof T) => {
     if (key in over) {
       (merged as any)[key] = (over as any)[key];
@@ -69,6 +69,67 @@ export class FieldConfigService {
       layoutClass: 'primary',
     };
     return mergeField(defaults, { ...overrides, type: 'textarea' });
+  }
+
+  /**
+   * File picker field
+   * Supported extras on FieldConfig (kept as plain props for your renderer):
+   * - accept?: string            (".pdf,image/*")
+   * - multiple?: boolean         (default false)
+   * - maxFiles?: number
+   * - maxFileSize?: number       (bytes)
+   * - maxTotalSize?: number      (bytes)
+   */
+  getFileField(overrides: Partial<FieldConfig> = {}): FieldConfig {
+    const accept = overrides.accept;
+    const multiple = !!overrides.multiple;
+    const maxFiles = overrides.maxFiles;
+    const maxFileSize = overrides.maxFileSize; // bytes
+    const maxTotalSize = overrides.maxTotalSize; // bytes
+    const required = overrides.required ?? true;
+    const fileVariant = overrides.fileVariant ?? 'input';
+
+    const defaults: FieldConfig = {
+      type: 'file',
+      name: 'file',
+      label: 'form.labels.file',
+      placeholder: 'form.placeholders.file', // used by the read-only text input
+      required,
+      helperText: 'form.hints.file',
+      // UI hints used by your renderer component (app-input-file)
+      accept,
+      multiple,
+      maxFiles,
+      maxFileSize,
+      maxTotalSize,
+      fileVariant,
+      // Validators: compose requirements based on provided constraints
+      validators: [
+        ...(required ? [Validators.required] : []),
+        fileAcceptValidator(accept),
+        maxFilesValidator(multiple ? maxFiles : 1), // single mode => max 1
+        maxFileSizeValidator(maxFileSize),
+        maxTotalSizeValidator(maxTotalSize),
+      ],
+
+      disabled: false,
+      hidden: false,
+
+      children: [],
+      errorMessages: {
+        required: 'form.errors.file.required',
+        accept: 'form.errors.file.accept',
+        maxFiles: 'form.errors.file.maxFiles',
+        maxFileSize: 'form.errors.file.maxFileSize',
+        maxTotalSize: 'form.errors.file.maxTotalSize',
+      },
+      layoutClass: 'primary',
+      chipOptions: [],
+      autocompleteOptions: [],
+    };
+
+    // Force type to 'file', let overrides customize the rest
+    return mergeField(defaults, { ...overrides, type: 'file' });
   }
 
   getTextField(overrides: Partial<FieldConfig> = {}): FieldConfig {
@@ -349,7 +410,6 @@ export class FieldConfigService {
   }
 
   getAllFields(overrides: Partial<FieldConfig>[] = []): FieldConfig[] {
-    // Optional: pass an array of overrides aligned by index/type if you want
     return [
       this.getTextField(overrides[0]),
       this.getEmailField(overrides[1]),
@@ -362,6 +422,7 @@ export class FieldConfigService {
       this.getChipsField(overrides[8]),
       this.getAutocompleteField(overrides[9]),
       this.getTextAreaField(overrides[10]),
+      this.getFileField(overrides[11]),
     ];
   }
 }

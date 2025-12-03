@@ -13,12 +13,22 @@ export type FieldType =
   | 'array'
   | 'datepicker'
   | 'chips'
+  | 'file'
   | 'autocomplete'
   | 'textarea';
 
 export interface FieldComponent<T = unknown> {
   field: FieldConfig;
   control: import('@angular/forms').AbstractControl<T>;
+}
+
+export type FileVariant = 'input' | 'dropzone' | 'both';
+export interface FileVM {
+  key: string;
+  name: string;
+  size?: number;
+  ext?: string;
+  mime?: string;
 }
 
 export interface FieldConfig {
@@ -42,7 +52,7 @@ export interface FieldConfig {
   multiple?: boolean;
   errorMessages?: Record<string, string>;
   layoutClass?: 'primary' | 'accent' | 'warn' | 'neutral' | 'success' | string;
-  defaultValue?: string | number | boolean; // for text/email/phone/password, etc.
+  defaultValue?: string | number | boolean | File | File[] | string[]; // for text/email/phone/password, etc.
   chipOptions?: string[];
   autocompleteOptions?: string[];
   toggleIcons?: {
@@ -55,4 +65,9 @@ export interface FieldConfig {
   maxRows?: number;
   autoResize?: boolean;
   showCounter?: boolean;
+  accept?: string;
+  maxFiles?: number;
+  maxFileSize?: number;
+  maxTotalSize?: number;
+  fileVariant?: FileVariant;
 }

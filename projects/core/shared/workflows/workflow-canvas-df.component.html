@@ -1,0 +1,99 @@
+<!-- Palette (unchanged, just connected to canvasList) -->
+@if (availableActionsSig().length) {
+  <div
+    class="pxs-wf-palette"
+    cdkDropList
+    [cdkDropListSortingDisabled]="true"
+    [cdkDropListConnectedTo]="[canvasList]"
+    [cdkDropListData]="availableActionsSig()"
+  >
+    <div class="pxs-wf-palette-title">{{ 'actions' | translate }}:</div>
+
+    <div class="pxs-wf-palette-items" #paletteHost>
+      @for (a of availableActionsSig(); track a.type) {
+        <button
+          mat-flat-button
+          class="pxs-wf-pill"
+          cdkDrag
+          [cdkDragData]="a"
+          [disabled]="disabledSig()"
+          cdkDragRootElement=".pxs-wf-pill"
+          (cdkDragMoved)="onPaletteDragMoved($event)"
+          (cdkDragStarted)="isPaletteDragging.set(true)"
+          (cdkDragEnded)="isPaletteDragging.set(false)"
+        >
+          {{ a.type | translate }}
+          <ng-template cdkDragPreview>
+            <div class="pxs-wf-pill preview">{{ a.type }}</div>
+          </ng-template>
+          <ng-template cdkDragPlaceholder>
+            <div class="pxs-wf-pill placeholder"></div>
+          </ng-template>
+        </button>
+      }
+    </div>
+  </div>
+}
+
+<!-- Canvas wrapper is the drop target -->
+<div
+  class="pxs-wf-canvas-wrap"
+  cdkDropList
+  #canvasList="cdkDropList"
+  [cdkDropListDisabled]="!isPaletteDragging()"
+  [cdkDropListData]="{}"
+  (contextmenu)="onCanvasContextMenu($event)"
+  (click)="closeContextMenu()"
+  (cdkDropListDropped)="onDrop($event)"
+>
+  <ng-draw-flow
+    #flowEl
+    #flow
+    class="pxs-wf-canvas"
+    [ngModel]="dfModel()"
+    (ngModelChange)="onModelChange($event)"
+    (nodeSelected)="onNodeSelected($event)"
+    (nodeMoved)="onNodeMoved($event)"
+    (connectionCreated)="onConnectionCreated($event)"
+    (connectionDeleted)="onConnectionDeleted($event)"
+    (connectionSelected)="onConnectionSelected($event)"
+    (scale)="onScale($event)"
+    (pan)="onPan($any($event))"
+  >
+  </ng-draw-flow>
+  <!-- Context menu -->
+  @if (contextMenu(); as m) {
+    <div
+      class="pxs-wf-menu"
+      [style.left.px]="m.x"
+      [style.top.px]="m.y"
+      (click)="$event.stopPropagation()"
+    >
+      <button
+        mat-flat-button
+        class="warn"
+        (click)="onConfigureNode(m.id)"
+        [disabled]="isTerminal(m.id)"
+      >
+        {{ 'configure' | translate }}
+      </button>
+      <button
+        mat-flat-button
+        class="accent"
+        (click)="onDeleteNode(m.id)"
+        [disabled]="isTerminal(m.id)"
+      >
+        {{ 'delete' | translate }}
+      </button>
+      <button mat-flat-button (click)="closeContextMenu()">{{ 'close' | translate }}</button>
+    </div>
+  }
+  <p>{{ 'workflow_help' | translate }}</p>
+</div>
+
+<!-- Action Inspector (projected into ConfirmDialogComponent) -->
+<ng-template #actionInspectorTpl let-form="form" let-title="title">
+  <div class="form">
+    <app-dynamic-form [form]="inspectorForm" [config]="inspectorConfig"></app-dynamic-form>
+  </div>
+</ng-template>
