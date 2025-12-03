@@ -51,8 +51,8 @@ const VarSel = AppSelectors.AiVariantsSelectors;
 import { CORE_OPTIONS } from '@cadai/pxs-ng-core/tokens';
 
 import { ConfirmDialogComponent } from '../dialog/dialog.component';
-import { SelectComponent } from '../forms/fields/select/select.component';
 import { ToggleComponent } from '../forms/fields/toggle/toggle.component';
+import { SelectComponent } from '../forms/select/select.component';
 
 @Component({
   selector: 'app-layout',
