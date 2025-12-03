@@ -152,7 +152,7 @@ type FileControlValue = File | File[] | string[] | null;
               }}
             </button>
           }
-          <button mat-button type="button" color="warn" (click)="clear()">
+          <button mat-flat-button type="button" color="warn" (click)="clear()">
             {{ 'form.actions.clear' | translate: emptyParams }}
           </button>
         </div>
