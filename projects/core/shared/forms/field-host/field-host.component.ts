@@ -10,10 +10,10 @@ import { ChipsComponent } from '../fields/chips/chips.component';
 import { DatepickerComponent } from '../fields/date-picker/datepicker.component';
 import { InputFileComponent } from '../fields/file/file.component';
 import { RangeComponent } from '../fields/range/range.component';
+import { SelectComponent } from '../fields/select/select.component';
 import { TextFieldComponent } from '../fields/text-field/text-field.component';
 import { TextInputComponent } from '../fields/text-input/text-input.component';
 import { ToggleComponent } from '../fields/toggle/toggle.component';
-import { SelectComponent } from '../select/select.component';
 
 const FIELD_MAP: Partial<Record<FieldType | string, Type<FieldComponent>>> = {
   // text-ish
