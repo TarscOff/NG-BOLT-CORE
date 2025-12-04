@@ -105,7 +105,8 @@ jobs:
             ACCESS_FLAG=""
           fi
 
-          # Override registry to npmjs.org (ignore publishConfig in package.json)
+          # Configure npm authentication for npmjs.org
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > .npmrc
           npm config set registry https://registry.npmjs.org/
 
           # Skip if version already on npm
