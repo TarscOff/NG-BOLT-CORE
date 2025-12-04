@@ -105,6 +105,9 @@ jobs:
             ACCESS_FLAG=""
           fi
 
+          # Override registry to npmjs.org (ignore publishConfig in package.json)
+          npm config set registry https://registry.npmjs.org/
+
           # Skip if version already on npm
           if npm view "${PKG_NAME}@${PKG_VER}" version >/dev/null 2>&1; then
             echo "Version ${PKG_VER} already exists on npm. Skipping publish."
@@ -115,7 +118,7 @@ jobs:
           npm config set ignore-scripts true
 
           echo "Publishing ${PKG_NAME}@${PKG_VER} to npm..."
-          npm publish --ignore-scripts ${ACCESS_FLAG}
+          npm publish --registry https://registry.npmjs.org/ --ignore-scripts ${ACCESS_FLAG}
           echo "Publish completed."
 
   tag_on_main:
