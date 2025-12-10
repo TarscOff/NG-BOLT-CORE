@@ -44,6 +44,7 @@ function normalize(opts: CoreOptions): Required<CoreOptions> {
     animations: opts.animations ?? true,
     appVersion: opts.appVersion ?? '0.0.0',
     environments: (opts.environments as RuntimeConfig) ?? ({} as RuntimeConfig),
+    logoUrl: opts.logoUrl ?? null,
   } as Required<CoreOptions>;
 }
 
