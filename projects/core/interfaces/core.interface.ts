@@ -78,6 +78,7 @@ export interface CoreOptions {
   /** Optional: disable animations if host doesn’t use @angular/animations */
   animations?: boolean; // default: true
   environments?: RuntimeConfig;
+  logoUrl?: string;
 }
 
 export interface FeatureNavItem {

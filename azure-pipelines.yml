@@ -84,10 +84,6 @@ stages:
             # IMPORTANT: point to the file you just created (a file, not a folder)
             workingFile: '$(Pipeline.Workspace)/pxs-ng-core/.npmrc'
 
-        # (Optional) Remove this; printing tokens is risky
-        # - script: cat $(Pipeline.Workspace)/pxs-ng-core/.npmrc
-        #   displayName: 'Show .npmrc (debug)'
-
         - script: |
             set -euo pipefail
             PKG_DIR="$(Pipeline.Workspace)/pxs-ng-core"

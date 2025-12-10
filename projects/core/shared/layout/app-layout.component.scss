@@ -16,6 +16,16 @@ mat-toolbar {
 .nav-title {
   font-weight: bold;
   padding: 16px;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  margin-left: 10px;
+
+  img {
+    max-width: 60px;
+    margin: 5px;
+    margin-right: 13px;
+  }
 }
 
 mat-sidenav {

@@ -1,6 +1,9 @@
 <mat-sidenav-container class="app-container">
   <mat-sidenav #sidenav mode="side" [(opened)]="isOpen" class="side-nav" [fixedInViewport]="true">
-    <div class="nav-title">{{ 'navigationTitle' | translate }}</div>
+    <div class="nav-title">
+      <img [src]="logoUrl" alt="Logo" class="logo" />
+      {{ 'navigationTitle' | translate }}
+    </div>
 
     <mat-nav-list class="menu-list">
       @for (item of menuItems; track item.route) {
