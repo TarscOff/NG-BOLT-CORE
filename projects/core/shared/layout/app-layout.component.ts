@@ -390,4 +390,11 @@ export class AppLayoutComponent implements OnInit, AfterViewInit {
     if (!result) return;
     // Persist quick-settings if desired
   }
+
+  get logoUrl(): string {
+    return (
+      this.coreOpts.logoUrl ||
+      'https://clarence-cloud.com/wp-content/themes/theme-clarence/assets/public/img/cloud-clarence.png'
+    );
+  }
 }
