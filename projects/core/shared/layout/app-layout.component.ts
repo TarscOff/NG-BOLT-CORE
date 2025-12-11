@@ -188,8 +188,11 @@ export class AppLayoutComponent implements OnInit, AfterViewInit {
     if (this.sidenavContent?.nativeElement) {
       fromEvent(this.sidenavContent.nativeElement, 'scroll')
         .pipe(
-          throttleTime(100),
-          map(() => this.sidenavContent.nativeElement.scrollTop > 20),
+          throttleTime(50), // Reduced throttle for better responsiveness
+          map(() => {
+            const scrollTop = this.sidenavContent.nativeElement.scrollTop;
+            return scrollTop > 5; // Lower threshold for better detection
+          }),
           distinctUntilChanged(),
           takeUntilDestroyed(this.destroyRef),
         )
