@@ -14,17 +14,22 @@
   display: flex;
   align-items: center;
   gap: 4px;
+
+  &:last-child {
+    .breadcrumb-text {
+      color: var(--mat-accent);
+    }
+  }
 }
 
 .breadcrumb-link {
-  color: var(--mat-accent);
+  color: var(--mat-primary);
   cursor: pointer;
   text-decoration: none;
-  transition: all 0.2s ease-in-out;
+  transition: color 0.2s ease-in-out;
 
   &:hover {
     text-decoration: underline;
-    font-weight: 600;
     color: var(--mat-primary-variant, #1565c0);
   }
 }
