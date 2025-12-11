@@ -27,14 +27,7 @@ import { RouterModule, RouterOutlet } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { combineLatest, firstValueFrom, fromEvent, Observable } from 'rxjs';
-import {
-  distinctUntilChanged,
-  filter,
-  map,
-  startWith,
-  switchMap,
-  throttleTime,
-} from 'rxjs/operators';
+import { distinctUntilChanged, filter, map, startWith, switchMap } from 'rxjs/operators';
 
 import {
   AuthProfile,
@@ -188,11 +181,7 @@ export class AppLayoutComponent implements OnInit, AfterViewInit {
     if (this.sidenavContent?.nativeElement) {
       fromEvent(this.sidenavContent.nativeElement, 'scroll')
         .pipe(
-          throttleTime(50), // Reduced throttle for better responsiveness
-          map(() => {
-            const scrollTop = this.sidenavContent.nativeElement.scrollTop;
-            return scrollTop > 5; // Lower threshold for better detection
-          }),
+          map(() => this.sidenavContent.nativeElement.scrollTop > 0),
           distinctUntilChanged(),
           takeUntilDestroyed(this.destroyRef),
         )
