@@ -30,6 +30,7 @@ import { distinctUntilChanged, filter, map, startWith, switchMap } from 'rxjs/op
 
 import {
   AuthProfile,
+  BreadcrumbItem,
   ConfirmDialogData,
   CoreOptions,
   FeatureNavItem,
@@ -50,6 +51,7 @@ const VarSel = AppSelectors.AiVariantsSelectors;
 
 import { CORE_OPTIONS } from '@cadai/pxs-ng-core/tokens';
 
+import { BreadcrumbComponent } from '../breadcrumb/breadcrumb.component';
 import { ConfirmDialogComponent } from '../dialog/dialog.component';
 import { SelectComponent } from '../forms/fields/select/select.component';
 import { ToggleComponent } from '../forms/fields/toggle/toggle.component';
@@ -76,6 +78,7 @@ import { ToggleComponent } from '../forms/fields/toggle/toggle.component';
     TranslateModule,
     SelectComponent,
     ToggleComponent,
+    BreadcrumbComponent,
   ],
   templateUrl: './app-layout.component.html',
   styleUrls: ['./app-layout.component.scss'],
@@ -91,6 +94,8 @@ export class AppLayoutComponent implements OnInit, AfterViewInit {
   public title$!: Observable<string>;
   public version!: string;
   public menuItems: FeatureNavItem[] = [];
+
+  public breadcrumbItems$!: Observable<BreadcrumbItem[]>;
 
   // Theme
   public themeField: FieldConfig = {
@@ -172,6 +177,7 @@ export class AppLayoutComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     // ----- App basics -----
     this.title$ = this.layoutService.title$;
+    this.breadcrumbItems$ = this.layoutService.breadcrumbs$;
     this.version = this.coreOpts.appVersion || '0.0.0';
     this.menuItems = this.features.visibleFeaturesSig();
 
