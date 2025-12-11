@@ -14,14 +14,58 @@
 }
 
 mat-toolbar {
+  display: flex;
+  align-items: center;
   position: sticky;
   top: 0;
   z-index: 1000;
+  transition: all 0.3s ease-in-out;
+  background-color: transparent;
+
+  &.scrolled {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    &::after {
+      content: '';
+      background: linear-gradient(135deg, var(--mat-primary-variant), var(--mat-accent)) border-box;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.1;
+    }
+  }
 }
 
 .app-content {
   padding: 1rem;
   overflow: auto;
+}
+
+main {
+  // Make scrollbar more visible
+  &::-webkit-scrollbar {
+    width: 10px; // Slightly wider
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1); // More visible track
+    border-radius: 5px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--mat-primary); // Use primary color
+    border-radius: 5px;
+
+    &:hover {
+      background: var(--mat-primary-dark);
+    }
+  }
+
+  // Firefox
+  scrollbar-width: auto; // Normal width (not thin)
+  scrollbar-color: var(--mat-primary) rgba(0, 0, 0, 0.1);
 }
 
 .nav-title {
@@ -205,11 +249,6 @@ mat-sidenav {
       display: none;
     }
   }
-}
-
-mat-toolbar {
-  display: flex;
-  align-items: center;
 }
 
 .spacer {
