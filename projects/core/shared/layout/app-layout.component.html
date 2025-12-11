@@ -96,8 +96,8 @@
     </div>
   </mat-sidenav>
 
-  <mat-sidenav-content>
-    <mat-toolbar color="primary">
+  <mat-sidenav-content #sidenavContent>
+    <mat-toolbar color="primary" [class.scrolled]="isScrolled">
       <button mat-icon-button (click)="sidenav.toggle()">
         <mat-icon>menu</mat-icon>
       </button>

@@ -5,6 +5,7 @@ import {
   ChangeDetectorRef,
   Component,
   DestroyRef,
+  ElementRef,
   Inject,
   inject,
   OnInit,
@@ -25,8 +26,15 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterModule, RouterOutlet } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { combineLatest, firstValueFrom, Observable } from 'rxjs';
-import { distinctUntilChanged, filter, map, startWith, switchMap } from 'rxjs/operators';
+import { combineLatest, firstValueFrom, fromEvent, Observable } from 'rxjs';
+import {
+  distinctUntilChanged,
+  filter,
+  map,
+  startWith,
+  switchMap,
+  throttleTime,
+} from 'rxjs/operators';
 
 import {
   AuthProfile,
@@ -96,6 +104,9 @@ export class AppLayoutComponent implements OnInit, AfterViewInit {
   public menuItems: FeatureNavItem[] = [];
 
   public breadcrumbItems$!: Observable<BreadcrumbItem[]>;
+
+  @ViewChild('sidenavContent', { read: ElementRef }) sidenavContent!: ElementRef;
+  public isScrolled = false;
 
   // Theme
   public themeField: FieldConfig = {
@@ -172,6 +183,21 @@ export class AppLayoutComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.cdr.detectChanges();
+
+    // Listen to scroll events
+    if (this.sidenavContent?.nativeElement) {
+      fromEvent(this.sidenavContent.nativeElement, 'scroll')
+        .pipe(
+          throttleTime(100),
+          map(() => this.sidenavContent.nativeElement.scrollTop > 20),
+          distinctUntilChanged(),
+          takeUntilDestroyed(this.destroyRef),
+        )
+        .subscribe((scrolled) => {
+          this.isScrolled = scrolled;
+          this.cdr.markForCheck();
+        });
+    }
   }
 
   ngOnInit(): void {
