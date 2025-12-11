@@ -2,8 +2,12 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 8px 0;
   font-size: 14px;
+}
+
+:host {
+  height: 22px;
+  display: block;
 }
 
 .breadcrumb-item {
@@ -13,13 +17,14 @@
 }
 
 .breadcrumb-link {
-  color: var(--mat-primary, #1976d2);
+  color: var(--mat-accent);
   cursor: pointer;
   text-decoration: none;
-  transition: color 0.2s;
+  transition: all 0.2s ease-in-out;
 
   &:hover {
     text-decoration: underline;
+    font-weight: 600;
     color: var(--mat-primary-variant, #1565c0);
   }
 }
@@ -36,5 +41,5 @@
   font-size: 18px;
   width: 18px;
   height: 18px;
-  color: rgba(0, 0, 0, 0.54);
+  color: var(--mat-accent);
 }
