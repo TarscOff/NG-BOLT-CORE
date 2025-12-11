@@ -1,3 +1,4 @@
+export { BreadcrumbComponent } from './breadcrumb/breadcrumb.component';
 export { ChartComponent } from './charts/chart.component';
 export { ConfirmDialogComponent } from './dialog/dialog.component';
 export { ForbiddenComponent } from './forbidden/forbidden.component';

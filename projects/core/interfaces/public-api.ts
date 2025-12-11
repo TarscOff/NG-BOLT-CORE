@@ -8,6 +8,7 @@ export {
   type ThemeState,
 } from './app.model';
 export { type AuthState, initialAuthState } from './auth.model';
+export { type BreadcrumbItem } from './breadcrumb.model';
 export {
   type AppFeature,
   type CoreOptions,

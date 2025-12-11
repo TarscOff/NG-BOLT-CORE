@@ -1,0 +1,24 @@
+@if (items !== null && items.length !== 0) {
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    @for (item of items; track $index; let isLast = $last) {
+      <span class="breadcrumb-item">
+        @if (isClickable(item)) {
+          <a
+            class="breadcrumb-link"
+            (click)="navigate(item)"
+            [attr.aria-current]="isLast ? 'page' : null"
+          >
+            {{ item.label }}
+          </a>
+        } @else {
+          <span class="breadcrumb-text" [class.disabled]="item.disabled">
+            {{ item.label }}
+          </span>
+        }
+        @if (!isLast) {
+          <mat-icon class="breadcrumb-separator">chevron_right</mat-icon>
+        }
+      </span>
+    }
+  </nav>
+}
