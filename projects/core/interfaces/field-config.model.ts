@@ -64,6 +64,7 @@ export interface FieldConfig {
   rows?: number;
   maxRows?: number;
   autoResize?: boolean;
+  isResizable?: boolean;
   showCounter?: boolean;
   accept?: string;
   maxFiles?: number;
