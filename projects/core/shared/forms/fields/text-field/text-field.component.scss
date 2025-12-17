@@ -17,6 +17,8 @@
       display: block;
       width: 100%;
       transition: none; // Smooth resizing without animation lag
+      overflow-y: auto !important; // Ensure scrollbar appears when content exceeds height
+      min-height: 24px; // Base minimum
     }
   }
 }
@@ -27,12 +29,13 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 8px;
+  height: 12px; // Slightly larger for easier grabbing
   cursor: ns-resize;
   z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
+  user-select: none; // Prevent text selection while dragging
 
   &:hover .resize-handle-bar {
     background: var(--mat-primary);
@@ -47,10 +50,11 @@
 
 // Visual bar for the handle
 .resize-handle-bar {
-  width: 40px;
+  width: 48px;
   height: 4px;
   background: color-mix(in srgb, var(--mat-primary) 30%, transparent);
   border-radius: 2px;
   opacity: 0.6;
   transition: all 0.2s ease;
+  pointer-events: none; // Let clicks pass through to parent
 }
