@@ -13,6 +13,22 @@
   }
 }
 
+.title-breadcrumb {
+  margin-left: 15px;
+}
+
+.theme-selector {
+  margin-bottom: 15px;
+  display: block;
+}
+
+.section-label {
+  margin: 10px 0;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--mat-accent);
+}
+
 mat-toolbar {
   display: flex;
   align-items: center;
@@ -76,6 +92,12 @@ main {
   align-items: center;
   padding: 0;
   margin-left: 10px;
+
+  a {
+    margin: 0;
+    padding: 0;
+    display: block;
+  }
 
   img {
     max-width: 60px;
