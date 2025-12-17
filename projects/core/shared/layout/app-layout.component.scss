@@ -94,9 +94,14 @@ main {
   margin-left: 10px;
 
   a {
-    margin: 0;
+    margin: 5px 0 0 0;
     padding: 0;
     display: block;
+    font-style: normal;
+    text-decoration: none;
+    color: var(--mat-sidenav-container-text-color, var(--mat-sys-on-surface-variant));
+    display: flex;
+    align-items: center;
   }
 
   img {
