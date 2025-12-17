@@ -294,12 +294,223 @@ type FileFieldConfig = FieldConfig & {
 };
 ```
 
+### Complete `FieldConfig` Interface Reference
+
+All field types extend from the base `FieldConfig` interface. Below is the complete list of available properties:
+
+#### Core Properties (All Field Types)
+
+| Property        | Type                                                                  | Description                                                                                                                                                                      |
+| --------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`          | `FieldType`                                                           | **Required**. Field type: `'text'`, `'email'`, `'password'`, `'phone'`, `'textarea'`, `'datepicker'`, `'chips'`, `'autocomplete'`, `'toggle'`, `'dropdown'`, `'range'`, `'file'` |
+| `name`          | `string`                                                              | **Required**. Unique control key in the FormGroup                                                                                                                                |
+| `label`         | `string`                                                              | Field label (i18n key or plain text)                                                                                                                                             |
+| `placeholder`   | `string`                                                              | Placeholder text (i18n key or plain text)                                                                                                                                        |
+| `required`      | `boolean`                                                             | Marks field as required (adds asterisk, used with `Validators.required`)                                                                                                         |
+| `disabled`      | `boolean`                                                             | Disables the field (non-interactive)                                                                                                                                             |
+| `hidden`        | `boolean`                                                             | Hides the field from the UI                                                                                                                                                      |
+| `helperText`    | `string`                                                              | Helper/hint text displayed below field (i18n key)                                                                                                                                |
+| `validators`    | `ValidatorFn[]`                                                       | Array of Angular validators                                                                                                                                                      |
+| `errorMessages` | `Record<string, string>`                                              | Map of error keys to i18n keys for custom error messages                                                                                                                         |
+| `layoutClass`   | `'primary' \| 'accent' \| 'warn' \| 'neutral' \| 'success' \| string` | CSS/theme class for styling                                                                                                                                                      |
+| `color`         | `ThemePalette`                                                        | Material theme color (`'primary'`, `'accent'`, `'warn'`)                                                                                                                         |
+| `defaultValue`  | `string \| number \| boolean \| File \| File[] \| string[]`           | Initial value for the field                                                                                                                                                      |
+
+#### Text & Input Fields (`text`, `email`, `password`, `phone`)
+
+| Property    | Type     | Description                                                    |
+| ----------- | -------- | -------------------------------------------------------------- |
+| `minLength` | `number` | Minimum character length (use with `Validators.minLength()`)   |
+| `maxLength` | `number` | Maximum character length (use with `Validators.maxLength()`)   |
+| `pattern`   | `string` | Regex pattern for validation (use with `Validators.pattern()`) |
+
+#### Textarea Fields (`textarea`)
+
+| Property      | Type      | Description                                                                                 |
+| ------------- | --------- | ------------------------------------------------------------------------------------------- |
+| `rows`        | `number`  | Initial number of rows (default: `3`)                                                       |
+| `maxRows`     | `number`  | Maximum rows when auto-resizing (default: `8` if `autoResize` is true)                      |
+| `autoResize`  | `boolean` | Enable CDK auto-resize based on content (default: `false`)                                  |
+| `isResizable` | `boolean` | Enable manual resize with drag handle. Disables `autoResize` when `true` (default: `false`) |
+| `showCounter` | `boolean` | Display character counter (requires `maxLength`)                                            |
+| `minLength`   | `number`  | Minimum character length                                                                    |
+| `maxLength`   | `number`  | Maximum character length                                                                    |
+
+#### Dropdown/Select Fields (`dropdown`)
+
+| Property   | Type                                           | Description                            |
+| ---------- | ---------------------------------------------- | -------------------------------------- |
+| `options`  | `{ label: string; value: string \| number }[]` | Array of options for dropdown          |
+| `multiple` | `boolean`                                      | Enable multi-select (default: `false`) |
+
+#### Chips Fields (`chips`)
+
+| Property      | Type       | Description                              |
+| ------------- | ---------- | ---------------------------------------- |
+| `chipOptions` | `string[]` | Array of available chip values           |
+| `multiple`    | `boolean`  | Enable multi-selection (default: `true`) |
+
+#### Autocomplete Fields (`autocomplete`)
+
+| Property              | Type       | Description                               |
+| --------------------- | ---------- | ----------------------------------------- |
+| `autocompleteOptions` | `string[]` | Array of autocomplete suggestions         |
+| `multiple`            | `boolean`  | Enable multi-selection (default: `false`) |
+
+#### Toggle/Switch Fields (`toggle`)
+
+| Property      | Type                                                       | Description                    |
+| ------------- | ---------------------------------------------------------- | ------------------------------ |
+| `toggleIcons` | `{ on: string; off: string; position?: 'start' \| 'end' }` | Custom icons for toggle states |
+
+#### Range/Slider Fields (`range`)
+
+| Property | Type     | Description               |
+| -------- | -------- | ------------------------- |
+| `min`    | `number` | Minimum slider value      |
+| `max`    | `number` | Maximum slider value      |
+| `step`   | `number` | Step increment for slider |
+
+#### File Upload Fields (`file`)
+
+| Property       | Type                              | Description                                                                                 |
+| -------------- | --------------------------------- | ------------------------------------------------------------------------------------------- |
+| `accept`       | `string`                          | Accepted file types (MIME types or extensions: `".pdf,.docx,image/*"`)                      |
+| `multiple`     | `boolean`                         | Enable multi-file selection (default: `false`)                                              |
+| `maxFiles`     | `number`                          | Maximum number of files allowed (counts only `File` objects)                                |
+| `maxFileSize`  | `number`                          | Maximum size per file in bytes                                                              |
+| `maxTotalSize` | `number`                          | Maximum total size of all files in bytes                                                    |
+| `fileVariant`  | `'input' \| 'dropzone' \| 'both'` | UI variant: `'input'` (browse button), `'dropzone'` (drag & drop area), `'both'` (combined) |
+
+#### Nested Fields (`group`, `array`)
+
+| Property   | Type            | Description                                  |
+| ---------- | --------------- | -------------------------------------------- |
+| `children` | `FieldConfig[]` | Child field configurations for nested groups |
+
+### Property Usage Examples
+
+#### Text Field with Character Limits
+
+```ts
+{
+  type: 'text',
+  name: 'username',
+  label: 'form.labels.username',
+  minLength: 3,
+  maxLength: 20,
+  showCounter: true,
+  validators: [Validators.required, Validators.minLength(3), Validators.maxLength(20)]
+}
+```
+
+#### Resizable Textarea
+
+```ts
+{
+  type: 'textarea',
+  name: 'description',
+  label: 'form.labels.description',
+  isResizable: true,  // Enables manual resize handle
+  rows: 4,            // Initial height
+  maxLength: 500,
+  showCounter: true
+}
+```
+
+#### Auto-Resizing Textarea
+
+```ts
+{
+  type: 'textarea',
+  name: 'comments',
+  label: 'form.labels.comments',
+  autoResize: true,   // Auto-expands with content
+  rows: 3,            // Min rows
+  maxRows: 10         // Max rows before scrolling
+}
+```
+
+#### Multi-Select Dropdown
+
+```ts
+{
+  type: 'dropdown',
+  name: 'roles',
+  label: 'form.labels.roles',
+  multiple: true,
+  options: [
+    { label: 'Admin', value: 'admin' },
+    { label: 'User', value: 'user' },
+    { label: 'Manager', value: 'manager' }
+  ]
+}
+```
+
+#### File Upload with Dropzone
+
+```ts
+{
+  type: 'file',
+  name: 'documents',
+  label: 'form.labels.documents',
+  fileVariant: 'dropzone',
+  multiple: true,
+  accept: '.pdf,.docx',
+  maxFiles: 5,
+  maxFileSize: 5 * 1024 * 1024,      // 5 MB per file
+  maxTotalSize: 20 * 1024 * 1024,    // 20 MB total
+  required: true
+}
+```
+
+#### Range Slider
+
+```ts
+{
+  type: 'range',
+  name: 'volume',
+  label: 'form.labels.volume',
+  min: 0,
+  max: 100,
+  step: 5,
+  defaultValue: 50
+}
+```
+
+#### Toggle with Custom Icons
+
+```ts
+{
+  type: 'toggle',
+  name: 'notifications',
+  label: 'form.labels.notifications',
+  toggleIcons: {
+    on: 'notifications_active',
+    off: 'notifications_off',
+    position: 'start'
+  }
+}
+```
+
+### Best Practices
+
+1. **Always provide `name` and `type`**: These are required for all fields.
+2. **Use i18n keys** for `label`, `placeholder`, `helperText`, and `errorMessages`.
+3. **Match validators to constraints**: If using `maxLength`, include `Validators.maxLength()` in `validators`.
+4. **Choose the right variant**:
+   - Use `autoResize: true` for dynamic content that grows
+   - Use `isResizable: true` for user-controlled sizing
+   - Never use both together (they conflict)
+5. **File field limits**: `maxFiles` only counts `File` objects, not string URLs.
+6. **Nested groups**: Use `children` for complex forms with logical grouping.
+
 ### `fileVariant` options
 
 The component supports three UI variants to match different UX needs:
 
 - **`'input'` (default)**: Traditional form field with a browse button. Clean, compact, fits well in standard forms.
-- \*\*`'dropzone'`: Drag-and-drop zone only. Larger, more prominent, ideal for file-centric workflows.
+- **`'dropzone'`**: Drag-and-drop zone only. Larger, more prominent, ideal for file-centric workflows.
 - **`'both'`**: Combines a form field with browse button AND a drag-and-drop zone below. Maximum flexibility for users who prefer either interaction pattern.
 
 ### `accept` syntax
