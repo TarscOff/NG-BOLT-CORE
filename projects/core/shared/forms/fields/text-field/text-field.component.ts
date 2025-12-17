@@ -47,11 +47,12 @@ import { FieldConfig } from '@cadai/pxs-ng-core/interfaces';
           [attr.aria-invalid]="fc.invalid || null"
           [attr.aria-required]="field.required || null"
           [attr.aria-disabled]="fc.disabled || null"
+          [class.resizable]="field.isResizable"
           (blur)="fc.markAsTouched()"
-          cdkTextareaAutosize
+          [cdkTextareaAutosize]="!field.isResizable"
           [cdkAutosizeMinRows]="minRows"
           [cdkAutosizeMaxRows]="maxRows"
-          [rows]="!field.autoResize ? minRows : null"
+          [rows]="!field.autoResize && !field.isResizable ? minRows : minRows"
         ></textarea>
       } @else {
         <input

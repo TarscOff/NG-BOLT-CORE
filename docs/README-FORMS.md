@@ -265,7 +265,7 @@ MyFeature → (FormGroup + FieldConfig[]) → DynamicForm → FieldHost → Conc
 
 # 📁 File Field (`type: 'file'`) — Complete Guide
 
-The file field is rendered by `InputFileComponent`. It supports **single** and **multiple** file selection, client‑side limits, i18n, ARIA, and safe error handling.
+The file field is rendered by `InputFileComponent`. It supports **single** and **multiple** file selection, client‑side limits, i18n, ARIA, and safe error handling. It offers **three UI variants** for different use cases.
 
 ## Value shape
 
@@ -287,11 +287,20 @@ type FileFieldConfig = FieldConfig & {
   maxTotalSize?: number; // total bytes limit (sum of File sizes)
   required?: boolean; // standard required semantics
   validators?: ValidatorFn[]; // e.g., [Validators.required]
+  fileVariant?: 'input' | 'dropzone' | 'both'; // UI variant (default: 'input')
   errorMessages?: Partial<
     Record<'required' | 'accept' | 'maxFiles' | 'maxFileSize' | 'maxTotalSize', string>
   >;
 };
 ```
+
+### `fileVariant` options
+
+The component supports three UI variants to match different UX needs:
+
+- **`'input'` (default)**: Traditional form field with a browse button. Clean, compact, fits well in standard forms.
+- \*\*`'dropzone'`: Drag-and-drop zone only. Larger, more prominent, ideal for file-centric workflows.
+- **`'both'`**: Combines a form field with browse button AND a drag-and-drop zone below. Maximum flexibility for users who prefer either interaction pattern.
 
 ### `accept` syntax
 
@@ -310,7 +319,12 @@ The component filters **accepted** files and drops rejected ones, while setting 
   `required → maxFiles → maxFileSize → maxTotalSize → accept`.
 - **Where errors are applied**: **after** `setValue()` and an initial `updateValueAndValidity({ emitEvent: false })`, we call `setErrors(...)`. This prevents Angular from overwriting custom errors.
 - **Display**: error message is rendered inside `<mat-error>` with `role="alert"` and `aria-live="polite"`.
-- **Read-only input**: the visible `<input matInput>` shows a summary (`"3 files"` or a single filename). Real file picking uses a hidden `<input type="file">`.
+- **Drag & drop** (variants `'dropzone'` and `'both'`):
+  - Visual feedback on dragover (border highlight)
+  - Prevents default browser behavior
+  - Filters files by `accept` criteria
+  - Works on both desktop and touch devices
+- **Read-only input** (variant `'input'`): the visible `<input matInput>` shows a summary (`"3 files"` or a single filename). Real file picking uses a hidden `<input type="file">`.
 
 ## i18n keys (add to your locale file)
 
@@ -324,7 +338,11 @@ The component filters **accepted** files and drops rejected ones, while setting 
     "clear": "Clear"
   },
   "files": {
-    "count": "{{count}} files"
+    "count": "{{count}} files",
+    "dropzone": {
+      "title": "Drop files here or click to browse",
+      "subtitle": "Accepted formats: {{accept}}"
+    }
   },
   "errors": {
     "file": {
@@ -349,6 +367,7 @@ getFileField(cfg: Partial<FileFieldConfig> & { name: string; label: string }): F
     placeholder: '',
     layoutClass: 'primary',
     multiple: false,
+    fileVariant: 'input', // default variant
     ...cfg,
     validators: [...(cfg.validators ?? [])],
     errorMessages: {
@@ -386,12 +405,13 @@ const MAP = {
 
 ## Common scenarios (recipes)
 
-### Single image (avatar)
+### Single image (avatar) - Input variant
 
 ```ts
 this.fieldsConfigService.getFileField({
   name: 'avatar',
   label: 'form.labels.avatar',
+  fileVariant: 'input', // compact form field
   accept: 'image/*',
   maxFiles: 1,
   maxFileSize: 2 * 1024 * 1024,
@@ -399,14 +419,32 @@ this.fieldsConfigService.getFileField({
 });
 ```
 
-### Multi-doc upload with strict caps
+### Multi-doc upload - Dropzone variant
+
+```ts
+this.fieldsConfigService.getFileField({
+  name: 'documents',
+  label: 'form.labels.documents',
+  fileVariant: 'dropzone', // prominent drag & drop area
+  multiple: true,
+  accept: '.pdf,.docx',
+  maxFiles: 10,
+  maxFileSize: 5 * 1024 * 1024,
+  maxTotalSize: 50 * 1024 * 1024,
+  required: true,
+  validators: [Validators.required],
+});
+```
+
+### Flexible upload - Both variants
 
 ```ts
 this.fieldsConfigService.getFileField({
   name: 'attachments',
   label: 'form.labels.attachments',
+  fileVariant: 'both', // browse button + dropzone
   multiple: true,
-  accept: '.pdf,.docx',
+  accept: '.pdf,.docx,image/*',
   maxFiles: 5,
   maxFileSize: 5 * 1024 * 1024,
   maxTotalSize: 12 * 1024 * 1024,
@@ -431,6 +469,10 @@ form.patchValue({
 - `aria-describedby` points to hint or error id depending on state.
 - Error text is inside `<mat-error>` with `role="alert"` and polite live region.
 - Keyboard users can focus the browse button and remove/clear buttons.
+- **Dropzone accessibility**:
+  - Clickable area has `role="button"` and `tabindex="0"`
+  - Keyboard activation (Enter/Space) triggers file picker
+  - Screen readers announce dropzone purpose via `aria-label`
 
 ## Testing checklist (unit/integration)
 
@@ -441,6 +483,11 @@ form.patchValue({
 - `required` appears when value is empty and field is touched.
 - `removeAt(i)` + `clear()` keep touched/dirty and recompute errors.
 - Same file can be selected twice (native input value reset after change).
+- **Variant-specific tests**:
+  - `'dropzone'`: drag & drop triggers file selection
+  - `'dropzone'`: click on dropzone opens file picker
+  - `'both'`: both browse button and dropzone work independently
+  - `'both'`: files from either method are combined in the same control
 
 ## Pitfalls & gotchas
 
@@ -448,6 +495,10 @@ form.patchValue({
 - `maxFiles` counts only `File` items, not `string` placeholders.
 - If your backend needs **total size** including already‑uploaded items, compute on the server; the client only sums current `File` objects.
 - Using `accept="image/*"` relies on browser MIME detection; some images may have empty MIME—extensions in `accept` can improve detection.
+- **Variant selection**: Choose based on your UX needs:
+  - Use `'input'` for compact forms with other fields
+  - Use `'dropzone'` for file-centric workflows or when files are the primary action
+  - Use `'both'` when you want maximum flexibility and have space for both patterns
 
 ## Async upload pattern (optional)
 

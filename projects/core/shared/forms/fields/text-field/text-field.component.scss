@@ -5,3 +5,25 @@
 .mat-mdc-form-field {
   display: block;
 }
+
+// Resizable textarea styles
+textarea.resizable {
+  resize: vertical;
+  min-height: 60px;
+  overflow: auto;
+
+  // Enhanced resize handle for better UX
+  &::-webkit-resizer {
+    border: 2px solid color-mix(in srgb, var(--mat-primary) 10%, transparent);
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--mat-primary) 50%, transparent);
+  }
+
+  &:hover::-webkit-resizer {
+    background: color-mix(in srgb, var(--mat-primary) 10%, transparent);
+    border-color: color-mix(in srgb, var(--mat-primary) 50%, transparent);
+  }
+
+  // Firefox resize handle styling
+  scrollbar-width: thin;
+}
