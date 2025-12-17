@@ -1,6 +1,6 @@
 {
   "name": "pxs-ng-core",
-  "version": "1.9.33",
+  "version": "1.9.36",
   "type": "module",
   "scripts": {
     "ng": "ng",

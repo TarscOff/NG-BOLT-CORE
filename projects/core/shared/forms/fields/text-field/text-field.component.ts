@@ -1,6 +1,6 @@
 import { TextFieldModule } from '@angular/cdk/text-field';
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, ElementRef, Input, ViewChild } from '@angular/core';
 import {
   AbstractControl,
   FormControl,
@@ -35,25 +35,36 @@ import { FieldConfig } from '@cadai/pxs-ng-core/interfaces';
 
       <!-- Textarea vs Input -->
       @if (isTextarea) {
-        <textarea
-          matInput
-          [id]="field.name"
-          [formControl]="fc"
-          [placeholder]="field.placeholder || '' | translate"
-          [attr.minlength]="field.minLength || null"
-          [attr.maxlength]="field.maxLength || null"
-          [attr.aria-label]="field.label | translate"
-          [attr.aria-describedby]="ariaDescribedBy"
-          [attr.aria-invalid]="fc.invalid || null"
-          [attr.aria-required]="field.required || null"
-          [attr.aria-disabled]="fc.disabled || null"
-          [class.resizable]="field.isResizable"
-          (blur)="fc.markAsTouched()"
-          [cdkTextareaAutosize]="!field.isResizable"
-          [cdkAutosizeMinRows]="minRows"
-          [cdkAutosizeMaxRows]="maxRows"
-          [rows]="!field.autoResize && !field.isResizable ? minRows : minRows"
-        ></textarea>
+        <div class="textarea-wrapper" [class.resizable]="field.isResizable">
+          @if (field.isResizable) {
+            <div
+              class="resize-handle"
+              (mousedown)="onResizeStart($event)"
+              (touchstart)="onResizeStart($event)"
+            >
+              <div class="resize-handle-bar"></div>
+            </div>
+          }
+          <textarea
+            #textareaRef
+            matInput
+            [id]="field.name"
+            [formControl]="fc"
+            [placeholder]="field.placeholder || '' | translate"
+            [attr.minlength]="field.minLength || null"
+            [attr.maxlength]="field.maxLength || null"
+            [attr.aria-label]="field.label | translate"
+            [attr.aria-describedby]="ariaDescribedBy"
+            [attr.aria-invalid]="fc.invalid || null"
+            [attr.aria-required]="field.required || null"
+            [attr.aria-disabled]="fc.disabled || null"
+            (blur)="fc.markAsTouched()"
+            [cdkTextareaAutosize]="!field.isResizable"
+            [cdkAutosizeMinRows]="minRows"
+            [cdkAutosizeMaxRows]="maxRows"
+            [rows]="!field.autoResize && !field.isResizable ? minRows : minRows"
+          ></textarea>
+        </div>
       } @else {
         <input
           matInput
@@ -100,6 +111,11 @@ import { FieldConfig } from '@cadai/pxs-ng-core/interfaces';
 export class TextFieldComponent {
   @Input({ required: true }) field!: FieldConfig;
   @Input({ required: true }) control!: AbstractControl<string>;
+  @ViewChild('textareaRef') textareaRef?: ElementRef<HTMLTextAreaElement>;
+
+  private isResizing = false;
+  private startY = 0;
+  private startHeight = 0;
 
   constructor(private t: TranslateService) {}
 
@@ -113,6 +129,51 @@ export class TextFieldComponent {
   }
   get maxRows() {
     return this.field.maxRows ?? (this.field.autoResize ? 8 : this.minRows);
+  }
+
+  // Min/max height in pixels for resizable mode
+  get minHeight() {
+    return this.minRows * 24; // Approximate line height
+  }
+  get maxHeight() {
+    return this.maxRows * 24;
+  }
+
+  onResizeStart(event: MouseEvent | TouchEvent) {
+    if (!this.textareaRef) return;
+
+    event.preventDefault();
+    this.isResizing = true;
+
+    const clientY = event instanceof MouseEvent ? event.clientY : event.touches[0].clientY;
+    this.startY = clientY;
+    this.startHeight = this.textareaRef.nativeElement.offsetHeight;
+
+    const onMove = (e: MouseEvent | TouchEvent) => this.onResizeMove(e);
+    const onEnd = () => this.onResizeEnd(onMove, onEnd);
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('touchmove', onMove);
+    document.addEventListener('mouseup', onEnd);
+    document.addEventListener('touchend', onEnd);
+  }
+
+  private onResizeMove(event: MouseEvent | TouchEvent) {
+    if (!this.isResizing || !this.textareaRef) return;
+
+    const clientY = event instanceof MouseEvent ? event.clientY : event.touches[0].clientY;
+    const deltaY = clientY - this.startY;
+    const newHeight = Math.max(this.minHeight, Math.min(this.maxHeight, this.startHeight + deltaY));
+
+    this.textareaRef.nativeElement.style.height = `${newHeight}px`;
+  }
+
+  private onResizeEnd(onMove: (e: MouseEvent | TouchEvent) => void, onEnd: () => void) {
+    this.isResizing = false;
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('mouseup', onEnd);
+    document.removeEventListener('touchend', onEnd);
   }
 
   // ---- input attributes (single line only) ----
