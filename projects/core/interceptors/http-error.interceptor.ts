@@ -5,7 +5,6 @@ import { throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
 import { CoreOptions } from '@cadai/pxs-ng-core/interfaces';
-import { ToastService } from '@cadai/pxs-ng-core/services';
 import { CORE_OPTIONS } from '@cadai/pxs-ng-core/tokens';
 
 const toAbs = (url: string) => new URL(url, document.baseURI).href;
@@ -17,7 +16,6 @@ const isAssetsUrl = (url: string) => {
 };
 
 export const httpErrorInterceptor: HttpInterceptorFn = (req, next) => {
-  const toast = inject(ToastService);
   const router = inject(Router);
   const { environments } = inject(CORE_OPTIONS) as Required<CoreOptions>;
 
@@ -57,9 +55,8 @@ export const httpErrorInterceptor: HttpInterceptorFn = (req, next) => {
         (err.error && (err.error.message || err.error.error_description)) ||
         err.statusText ||
         'Unexpected error. Please try again.';
-      toast.showError(message);
 
-      return throwError(() => err);
+      return throwError(() => message);
     }),
   );
 };

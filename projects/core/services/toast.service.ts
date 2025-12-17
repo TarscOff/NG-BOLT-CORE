@@ -10,8 +10,8 @@ export class ToastService {
   show(message: string, action = this.translate.instant('close'), duration = 3000): void {
     this.snackBar.open(message, action, {
       duration,
-      horizontalPosition: 'end',
-      verticalPosition: 'top',
+      horizontalPosition: 'center',
+      verticalPosition: 'bottom',
       panelClass: 'app-toast-success',
     });
   }
@@ -19,8 +19,8 @@ export class ToastService {
   showError(message: string, action = this.translate.instant('close'), duration = 3000): void {
     this.snackBar.open(message, action, {
       duration,
-      horizontalPosition: 'end',
-      verticalPosition: 'top',
+      horizontalPosition: 'center',
+      verticalPosition: 'bottom',
       panelClass: 'app-toast-error',
     });
   }
