@@ -163,9 +163,12 @@ export class TextFieldComponent {
 
     const clientY = event instanceof MouseEvent ? event.clientY : event.touches[0].clientY;
     const deltaY = clientY - this.startY;
+    // Invert deltaY: dragging down increases height, dragging up decreases
     const newHeight = Math.max(this.minHeight, Math.min(this.maxHeight, this.startHeight + deltaY));
 
     this.textareaRef.nativeElement.style.height = `${newHeight}px`;
+    this.textareaRef.nativeElement.style.minHeight = `${newHeight}px`;
+    this.textareaRef.nativeElement.style.maxHeight = `${newHeight}px`;
   }
 
   private onResizeEnd(onMove: (e: MouseEvent | TouchEvent) => void, onEnd: () => void) {
