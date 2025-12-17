@@ -1,7 +1,7 @@
 <mat-sidenav-container class="app-container">
   <mat-sidenav #sidenav mode="side" [(opened)]="isOpen" class="side-nav" [fixedInViewport]="true">
     <div class="nav-title">
-      <a routerLink="/" [attr.aria-label]="'navigation_home' | translate" role="link">
+      <a routerLink="/" role="link">
         <img [src]="logoUrl" alt="Logo" class="logo" />
         {{ 'navigationTitle' | translate }}
       </a>
