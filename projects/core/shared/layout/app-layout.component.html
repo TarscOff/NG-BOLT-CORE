@@ -1,8 +1,10 @@
 <mat-sidenav-container class="app-container">
   <mat-sidenav #sidenav mode="side" [(opened)]="isOpen" class="side-nav" [fixedInViewport]="true">
     <div class="nav-title">
-      <img [src]="logoUrl" alt="Logo" class="logo" />
-      {{ 'navigationTitle' | translate }}
+      <a routerLink="/" [attr.aria-label]="'navigation_home' | translate" role="link">
+        <img [src]="logoUrl" alt="Logo" class="logo" />
+        {{ 'navigationTitle' | translate }}
+      </a>
     </div>
 
     <mat-nav-list class="menu-list">
@@ -42,19 +44,31 @@
     <ng-template #switchersTpl>
       <div class="switchers-dialog">
         <!-- Theme -->
-        <app-toggle [field]="themeField" [control]="themeControl"></app-toggle>
+        <app-toggle
+          class="theme-selector"
+          [field]="themeField"
+          [control]="themeControl"
+        ></app-toggle>
 
         <!-- Language -->
         <app-select [field]="langField" [control]="langControl"></app-select>
 
+        <h3 class="section-label">{{ 'ai_settings' | translate }}</h3>
         <!-- AI Scope / Key / Value -->
-        @if ((aiScopeField.options?.length ?? 0) > 0) {
+        @if (
+          aiScopeField.options &&
+          aiScopeField.options.length > 0 &&
+          aiKeyField.options &&
+          aiKeyField.options.length > 0 &&
+          aiValueField.options &&
+          aiValueField.options.length > 0
+        ) {
           <app-select [field]="aiScopeField" [control]="aiScopeControl"></app-select>
         }
-        @if ((aiKeyField.options?.length ?? 0) > 0) {
+        @if (aiKeyField.options && aiKeyField.options.length > 0) {
           <app-select [field]="aiKeyField" [control]="aiKeyControl"></app-select>
         }
-        @if ((aiValueField.options?.length ?? 0) > 0) {
+        @if (aiValueField.options && aiValueField.options.length > 0) {
           <app-select [field]="aiValueField" [control]="aiValueControl"></app-select>
         }
       </div>
@@ -101,7 +115,7 @@
       <button mat-icon-button (click)="sidenav.toggle()">
         <mat-icon>menu</mat-icon>
       </button>
-      <div>
+      <div class="title-breadcrumb">
         <span class="title">
           {{ title$ | async }}
         </span>
