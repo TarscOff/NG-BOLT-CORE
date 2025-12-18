@@ -53,19 +53,24 @@
         <!-- Language -->
         <app-select [field]="langField" [control]="langControl"></app-select>
 
-        <h3 class="section-label">{{ 'ai_settings' | translate }}</h3>
+        @if (aiValueField.options && aiValueField.options.length > 0) {
+          <h3 class="section-label">{{ 'ai_settings' | translate }}</h3>
+        }
         <!-- AI Scope / Key / Value -->
         @if (
           aiScopeField.options &&
           aiScopeField.options.length > 0 &&
-          aiKeyField.options &&
-          aiKeyField.options.length > 0 &&
           aiValueField.options &&
           aiValueField.options.length > 0
         ) {
           <app-select [field]="aiScopeField" [control]="aiScopeControl"></app-select>
         }
-        @if (aiKeyField.options && aiKeyField.options.length > 0) {
+        @if (
+          aiKeyField.options &&
+          aiKeyField.options.length > 0 &&
+          aiValueField.options &&
+          aiValueField.options.length > 0
+        ) {
           <app-select [field]="aiKeyField" [control]="aiKeyControl"></app-select>
         }
         @if (aiValueField.options && aiValueField.options.length > 0) {
