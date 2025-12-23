@@ -1,24 +1,33 @@
 @if (items !== null && items.length !== 0) {
   <nav class="breadcrumb" aria-label="Breadcrumb">
-    @for (item of items; track $index; let isLast = $last) {
-      <span class="breadcrumb-item">
-        @if (isClickable(item)) {
-          <a
-            class="breadcrumb-link"
-            (click)="navigate(item)"
-            [attr.aria-current]="isLast ? 'page' : null"
-          >
-            {{ item.label }}
-          </a>
-        } @else {
-          <span class="breadcrumb-text" [class.disabled]="item.disabled">
-            {{ item.label }}
-          </span>
-        }
-        @if (!isLast) {
-          <mat-icon class="breadcrumb-separator accent" color="accent">chevron_right</mat-icon>
-        }
-      </span>
-    }
+    <ol class="breadcrumb-list">
+      @for (item of items; track $index; let isLast = $last) {
+        <li class="breadcrumb-item">
+          @if (isClickable(item)) {
+            <button
+              type="button"
+              class="breadcrumb-link"
+              (click)="navigate(item)"
+              [attr.aria-current]="isLast ? 'page' : null"
+            >
+              {{ item.label }}
+            </button>
+          } @else {
+            <span
+              class="breadcrumb-text"
+              [class.disabled]="item.disabled"
+              [attr.aria-disabled]="item.disabled ? 'true' : null"
+            >
+              {{ item.label }}
+            </span>
+          }
+          @if (!isLast) {
+            <mat-icon class="breadcrumb-separator accent" color="accent" aria-hidden="true"
+              >chevron_right</mat-icon
+            >
+          }
+        </li>
+      }
+    </ol>
   </nav>
 }
