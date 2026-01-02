@@ -42,7 +42,7 @@ export const error = () => COLOR.error();
 export const linearGradientError = (ctx: any, isDark: boolean) =>
   linearGradient(
     ctx,
-    cssVar('--mat-success', 'rgba(255,64,129,0.35)'),
+    cssVar('--mat-error', 'rgba(255,64,129,0.35)'),
     isDark ? 'rgba(0,0,0,0)' : 'rgba(255, 255, 255, 0)',
   );
 
