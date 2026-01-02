@@ -9,7 +9,7 @@ export interface ToolbarAction {
   label?: string; // visible text for non-icon variants
   tooltip?: string; // hover tooltip
   color?: ThemePalette; // 'primary' | 'accent' | 'warn'
-  class?: 'primary' | 'accent' | 'warn' | 'neutral' | 'success';
+  class?: 'primary' | 'accent' | 'warn' | 'neutral' | 'success' | string;
   variant?: ButtonVariant; // defaults to 'icon'
   visible$?: Observable<boolean>;
   disabled$?: Observable<boolean>;
