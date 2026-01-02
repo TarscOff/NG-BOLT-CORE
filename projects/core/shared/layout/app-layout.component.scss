@@ -130,6 +130,8 @@ mat-sidenav {
 .menu-list {
   flex: 1 1 auto;
   overflow-y: auto;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 .switchers-accordion {
@@ -171,10 +173,9 @@ mat-sidenav {
   padding: 8px 16px;
   text-decoration: none;
   color: inherit;
-  border-radius: 4px !important;
-  transition:
-    background-color 0.2s,
-    color 0.2s;
+  transition: all 0.2s ease-in-out;
+  border-radius: 99999px !important;
+  transform: scale(0.9);
 
   ::ng-deep {
     .mdc-list-item__content {
@@ -186,23 +187,35 @@ mat-sidenav {
   }
 
   &.active {
-    background-color: var(--mdc-fab-container-color);
+    background: linear-gradient(135deg, var(--mat-primary-variant), var(--mat-accent)) border-box;
+    color: #fff;
     font-weight: 600;
+    transform: scale(1) !important;
+
+    * {
+      color: #fff;
+    }
   }
 
   mat-icon {
     margin-right: 16px;
+    flex: 0 0 24px;
   }
 
   &:hover,
   &:active,
   &:focus,
   &:focus-visible {
-    background-color: var(--mdc-fab-container-color);
-    outline: none;
+    background: linear-gradient(135deg, var(--mat-primary-variant), var(--mat-accent)) border-box;
+    color: #fff;
+    transform: scale(1) !important;
 
     &::before {
       display: none;
+    }
+
+    * {
+      color: #fff;
     }
   }
 }

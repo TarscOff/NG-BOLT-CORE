@@ -479,6 +479,7 @@ export const COLOR = {
   warn: () => cssVar('--mat-warn', '#ec9a00ff'),
   neutral: () => cssVar('--mat-neutral', '#9e9e9e'),
   success: () => cssVar('--mat-success', '#4caf50'),
+  error: () => cssVar('--mat-error', '#d81f1fff'),
 };
 
 export const paletteFns = [
@@ -486,6 +487,7 @@ export const paletteFns = [
   COLOR.accent,
   COLOR.warn,
   COLOR.neutral,
+  COLOR.error,
   COLOR.success,
   COLOR.primaryVariant,
 ];
@@ -498,6 +500,14 @@ export const neutral = () => COLOR.neutral();
 export const warn = () => COLOR.warn();
 export const success = () => COLOR.success();
 export const accent = () => COLOR.accent();
+export const error = () => COLOR.error();
+
+export const linearGradientError = (ctx: any, isDark: boolean) =>
+  linearGradient(
+    ctx,
+    cssVar('--mat-error', 'rgba(255,64,129,0.35)'),
+    isDark ? 'rgba(0,0,0,0)' : 'rgba(255, 255, 255, 0)',
+  );
 
 export const linearGradientSuccess = (ctx: any, isDark: boolean) =>
   linearGradient(

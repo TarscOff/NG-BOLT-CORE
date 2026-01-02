@@ -80,6 +80,9 @@ Each layout class remaps the base Material roles (`primary`, `accent`,
 .neutral {
   --mat-primary: var(--mat-neutral);
 }
+.error {
+  --mat-primary: var(--mat-neutral);
+}
 ```
 
 All components keep `[color]="'primary'"`, but the meaning of "primary"

@@ -13,10 +13,11 @@ export function linearGradient(ctx: CanvasRenderingContext2D, from: string, to: 
 export const COLOR = {
   primary: () => cssVar('--mat-primary', '#42a5f5'),
   primaryVariant: () => cssVar('--mat-primary-variant', '#1e88e5'),
-  accent: () => cssVar('--mat-accent', '#ff4081'),
+  accent: () => cssVar('--mat-accent', '#a340ffff'),
   warn: () => cssVar('--mat-warn', '#ec9a00ff'),
   neutral: () => cssVar('--mat-neutral', '#9e9e9e'),
   success: () => cssVar('--mat-success', '#4caf50'),
+  error: () => cssVar('--mat-error', '#f44336'),
 };
 
 export const paletteFns = [
@@ -36,6 +37,14 @@ export const neutral = () => COLOR.neutral();
 export const warn = () => COLOR.warn();
 export const success = () => COLOR.success();
 export const accent = () => COLOR.accent();
+export const error = () => COLOR.error();
+
+export const linearGradientError = (ctx: any, isDark: boolean) =>
+  linearGradient(
+    ctx,
+    cssVar('--mat-success', 'rgba(255,64,129,0.35)'),
+    isDark ? 'rgba(0,0,0,0)' : 'rgba(255, 255, 255, 0)',
+  );
 
 export const linearGradientSuccess = (ctx: any, isDark: boolean) =>
   linearGradient(
@@ -69,6 +78,7 @@ export const linearGradientPrimary = (ctx: any, isDark: boolean) =>
   );
 
 export const successFill = () => `color-mix(in srgb, ${success()} 30%, transparent)`;
+export const errorFill = () => `color-mix(in srgb, ${error()} 30%, transparent)`;
 export const accentFill = () => `color-mix(in srgb, ${accent()} 30%, transparent)`;
 export const warnFill = () => `color-mix(in srgb, ${warn()} 30%, transparent)`;
 export const neutralFill = () => `color-mix(in srgb, ${neutral()} 30%, transparent)`;

@@ -6,7 +6,7 @@ export interface SmartActionButton {
   label?: string;
   tooltip?: string;
   color?: 'primary' | 'accent' | 'warn' | undefined;
-  class?: 'primary' | 'accent' | 'warn' | 'neutral' | 'success';
+  class?: 'primary' | 'accent' | 'warn' | 'neutral' | 'success' | string;
   disabledWhen?: (row: any) => boolean;
 }
 
