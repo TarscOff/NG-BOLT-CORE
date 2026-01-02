@@ -26,6 +26,7 @@ export const paletteFns = [
   COLOR.warn,
   COLOR.neutral,
   COLOR.success,
+  COLOR.error,
   COLOR.primaryVariant,
 ];
 

@@ -487,8 +487,8 @@ export const paletteFns = [
   COLOR.accent,
   COLOR.warn,
   COLOR.neutral,
-  COLOR.error,
   COLOR.success,
+  COLOR.error,
   COLOR.primaryVariant,
 ];
 
