@@ -15,7 +15,8 @@
           class="menu-link"
           [routerLink]="item.route"
           routerLinkActive="active"
-          matTooltipPosition="right"
+          [matTooltip]="(item.label | translate) ?? ''"
+          matTooltipPosition="below"
         >
           <mat-icon [color]="'primary'">{{ item.icon }}</mat-icon>
           <span class="menu-label">{{ item.label | translate }}</span>
