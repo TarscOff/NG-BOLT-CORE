@@ -1,8 +1,21 @@
 # Core SDK — Layout & Configuration Guide
 
-> _Last updated: 2025‑12‑11_
+> _Last updated: 2026‑04‑15_
 
 This document explains how to configure and use the **`AppLayoutComponent`** from the Core SDK, including:
+
+---
+
+## What changed — HeaderComponent (2026‑04‑15)
+
+- **`PageHeaderComponent` replaced by `HeaderComponent`** with `variant="normal" | "app"`.
+- **Auth, theme, and language** are handled internally — no bindings needed from the parent.
+- **`ToolbarActionsService`** is now injected inside `HeaderComponent` (`variant="app"` only) — removed from `AppLayoutComponent`.
+- **`HeaderNavLink`** extended with `url` for route or external navigation.
+- **`scrollThreshold`** added as configurable input (default `60`).
+- **All display strings** are `@Input()` i18n keys defaulting to `header.*` — override per instance if needed.
+
+---
 
 - **Dynamic logo configuration** from the hosting app
 - **Dynamic toolbar actions** (e.g., Back, Export, Delete) that each routed page can publish

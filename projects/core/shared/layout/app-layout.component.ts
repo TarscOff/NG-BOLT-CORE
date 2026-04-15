@@ -44,7 +44,6 @@ import {
   KeycloakService,
   LayoutService,
   ThemeService,
-  ToolbarActionsService,
 } from '@cadai/pxs-ng-core/services';
 import { AppActions, AppSelectors } from '@cadai/pxs-ng-core/store';
 
@@ -56,6 +55,7 @@ import { BreadcrumbComponent } from '../breadcrumb/breadcrumb.component';
 import { ConfirmDialogComponent } from '../dialog/dialog.component';
 import { SelectComponent } from '../forms/fields/select/select.component';
 import { ToggleComponent } from '../forms/fields/toggle/toggle.component';
+import { HeaderComponent } from '../header/header.component';
 
 @Component({
   selector: 'app-layout',
@@ -80,14 +80,13 @@ import { ToggleComponent } from '../forms/fields/toggle/toggle.component';
     SelectComponent,
     ToggleComponent,
     BreadcrumbComponent,
+    HeaderComponent,
   ],
   templateUrl: './app-layout.component.html',
   styleUrls: ['./app-layout.component.scss'],
 })
 export class AppLayoutComponent implements OnInit, AfterViewInit {
   constructor(@Inject(CORE_OPTIONS) private readonly coreOpts: Required<CoreOptions>) {}
-
-  public toolbarActions$ = inject(ToolbarActionsService).actions$;
 
   @ViewChild('switchersTpl', { static: true }) switchersTpl!: TemplateRef<unknown>;
   public isDark$!: Observable<boolean>;
