@@ -86,4 +86,7 @@ export interface FeatureNavItem {
   label: string;
   icon?: string;
   route?: string;
+  source?: 'config' | 'dynamic';
+  order?: number;
+  children?: FeatureNavItem[];
 }

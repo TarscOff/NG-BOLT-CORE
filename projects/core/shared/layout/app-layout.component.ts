@@ -5,6 +5,7 @@ import {
   ChangeDetectorRef,
   Component,
   DestroyRef,
+  effect,
   ElementRef,
   Inject,
   inject,
@@ -85,7 +86,12 @@ import { ToggleComponent } from '../forms/fields/toggle/toggle.component';
   styleUrls: ['./app-layout.component.scss'],
 })
 export class AppLayoutComponent implements OnInit, AfterViewInit {
-  constructor(@Inject(CORE_OPTIONS) private readonly coreOpts: Required<CoreOptions>) {}
+  constructor(@Inject(CORE_OPTIONS) private readonly coreOpts: Required<CoreOptions>) {
+    effect(() => {
+      this.menuItems = this.features.visibleFeaturesSig();
+      this.cdr.markForCheck();
+    });
+  }
 
   public toolbarActions$ = inject(ToolbarActionsService).actions$;
 
