@@ -3,7 +3,7 @@
 
   &::after {
     content: '';
-    background: linear-gradient(135deg, var(--mat-primary-variant), var(--mat-accent)) border-box;
+    background: linear-gradient(135deg, var(--mat-primary), var(--mat-accent)) border-box;
     position: absolute;
     top: 0;
     left: 0;
@@ -130,6 +130,19 @@ mat-sidenav {
 .menu-list {
   flex: 1 1 auto;
   overflow-y: auto;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.menu-group {
+  display: block;
+}
+
+.menu-children {
+  margin: -2px 0 6px 28px;
+  padding-left: 6px;
+  border-left: 1px solid
+    color-mix(in srgb, var(--mat-sidenav-container-text-color, currentColor) 18%, transparent);
 }
 
 .switchers-accordion {
@@ -171,10 +184,9 @@ mat-sidenav {
   padding: 8px 16px;
   text-decoration: none;
   color: inherit;
-  border-radius: 4px !important;
-  transition:
-    background-color 0.2s,
-    color 0.2s;
+  transition: all 0.2s ease-in-out;
+  border-radius: 99999px !important;
+  transform: scale(0.9);
 
   ::ng-deep {
     .mdc-list-item__content {
@@ -186,24 +198,47 @@ mat-sidenav {
   }
 
   &.active {
-    background-color: var(--mdc-fab-container-color);
+    background: linear-gradient(135deg, var(--mat-primary), var(--mat-accent)) border-box;
+    color: #fff;
     font-weight: 600;
+    transform: scale(1) !important;
+
+    * {
+      color: #fff;
+    }
   }
 
   mat-icon {
     margin-right: 16px;
+    flex: 0 0 24px;
   }
 
   &:hover,
   &:active,
   &:focus,
   &:focus-visible {
-    background-color: var(--mdc-fab-container-color);
-    outline: none;
+    background: linear-gradient(135deg, var(--mat-primary), var(--mat-accent)) border-box;
+    color: #fff;
+    transform: scale(1) !important;
 
     &::before {
       display: none;
     }
+
+    * {
+      color: #fff;
+    }
+  }
+}
+
+.menu-link--child {
+  min-height: 36px;
+  padding: 4px 12px;
+  font-size: 0.85rem;
+  opacity: 0.9;
+
+  mat-icon {
+    transform: scale(0.82);
   }
 }
 
@@ -248,7 +283,7 @@ mat-sidenav {
   }
 
   .quick-settings {
-    background: linear-gradient(135deg, var(--mat-primary-variant), var(--mat-accent)) border-box;
+    background: linear-gradient(135deg, var(--mat-primary), var(--mat-accent)) border-box;
     color: white;
   }
 

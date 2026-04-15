@@ -7,11 +7,16 @@ import {
   ReactiveFormsModule,
   ValidationErrors,
 } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
-import { FieldConfig } from '@cadai/pxs-ng-core/interfaces';
+import { FieldConfig, FieldVariableOption } from '@cadai/pxs-ng-core/interfaces';
 
 @Component({
   standalone: true,
@@ -21,6 +26,11 @@ import { FieldConfig } from '@cadai/pxs-ng-core/interfaces';
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
+    MatButtonModule,
+    MatChipsModule,
+    MatIconModule,
+    MatMenuModule,
+    MatTooltipModule,
     TextFieldModule,
     TranslateModule,
   ],
@@ -67,6 +77,7 @@ import { FieldConfig } from '@cadai/pxs-ng-core/interfaces';
         </div>
       } @else {
         <input
+          #inputRef
           matInput
           [id]="field.name"
           [type]="inputType"
@@ -87,6 +98,42 @@ import { FieldConfig } from '@cadai/pxs-ng-core/interfaces';
         />
       }
 
+      @if (showVariablePicker) {
+        <button
+          mat-icon-button
+          matSuffix
+          type="button"
+          class="variable-menu-button"
+          [matMenuTriggerFor]="variablesMenu"
+          [matTooltip]="field.variablePicker?.label || 'form.variables.insert' | translate"
+          [attr.aria-label]="field.variablePicker?.label || 'form.variables.insert' | translate"
+        >
+          <mat-icon>data_object</mat-icon>
+        </button>
+
+        <mat-menu #variablesMenu="matMenu" class="field-variable-menu">
+          @for (option of variableOptions; track option.token) {
+            <button
+              mat-menu-item
+              type="button"
+              class="variable-menu-item"
+              [matTooltip]="variableTooltip(option)"
+              matTooltipPosition="left"
+              (click)="insertVariable(option)"
+            >
+              <span class="variable-name">{{ option.name || option.key }}</span>
+              <span class="variable-token">{{ option.token }}</span>
+              <span class="variable-meta"
+                >{{ option.scope }}
+                @if (option.category) {
+                  / {{ option.category }}
+                }
+              </span>
+            </button>
+          }
+        </mat-menu>
+      }
+
       <!-- Hint (left) -->
       @if (field.helperText && !showError) {
         <mat-hint [id]="hintId">
@@ -105,6 +152,23 @@ import { FieldConfig } from '@cadai/pxs-ng-core/interfaces';
         </mat-error>
       }
     </mat-form-field>
+
+    @if (visibleVariableTags.length) {
+      <div class="variable-tags-preview" [attr.aria-label]="'form.variables.detected' | translate">
+        @for (option of visibleVariableTags; track option.token) {
+          <span
+            class="variable-tag"
+            [class.secret]="option.isSecret"
+            [class.unknown]="option.id === '__unknown__'"
+            [matTooltip]="variableTooltip(option)"
+            matTooltipPosition="above"
+          >
+            <mat-icon aria-hidden="true">sell</mat-icon>
+            {{ option.token }}
+          </span>
+        }
+      </div>
+    }
   `,
   styleUrls: ['./text-field.component.scss'],
 })
@@ -112,6 +176,7 @@ export class TextFieldComponent {
   @Input({ required: true }) field!: FieldConfig;
   @Input({ required: true }) control!: AbstractControl<string>;
   @ViewChild('textareaRef') textareaRef?: ElementRef<HTMLTextAreaElement>;
+  @ViewChild('inputRef') inputRef?: ElementRef<HTMLInputElement>;
 
   private isResizing = false;
   private startY = 0;
@@ -217,6 +282,67 @@ export class TextFieldComponent {
   get patternAttr(): string | null {
     const textTypes = ['text', 'email', 'password', 'phone', 'autocomplete'];
     return textTypes.includes(this.field.type) && this.field.pattern ? this.field.pattern : null;
+  }
+
+  get variableOptions(): FieldVariableOption[] {
+    const picker = this.field.variablePicker;
+    if (!picker || picker.enabled === false) return [];
+    return picker.options ?? [];
+  }
+
+  get showVariablePicker(): boolean {
+    return this.variableOptions.length > 0 && !this.fc.disabled;
+  }
+
+  get visibleVariableTags(): FieldVariableOption[] {
+    const value = `${this.fc.value ?? ''}`;
+    const tokens = Array.from(new Set(value.match(/\{\{\s*[\w.-]+\.[\w.-]+\s*\}\}/g) ?? []));
+    if (!tokens.length) return [];
+
+    const byToken = new Map(this.variableOptions.map((option) => [option.token, option]));
+    return tokens.map(
+      (token) =>
+        byToken.get(token) ?? {
+          id: '__unknown__',
+          key: token.replace(/[{}]/g, '').trim(),
+          token,
+          scope: token.replace(/[{}]/g, '').trim().split('.')[0] || 'unknown',
+          name: token,
+          description: 'Unresolved variable token',
+        },
+    );
+  }
+
+  insertVariable(option: FieldVariableOption): void {
+    const element = this.isTextarea
+      ? this.textareaRef?.nativeElement
+      : this.inputRef?.nativeElement;
+    const currentValue = `${this.fc.value ?? ''}`;
+    const token = option.token;
+    const start = element?.selectionStart ?? currentValue.length;
+    const end = element?.selectionEnd ?? start;
+    const nextValue = `${currentValue.slice(0, start)}${token}${currentValue.slice(end)}`;
+
+    this.fc.setValue(nextValue);
+    this.fc.markAsDirty();
+    this.fc.markAsTouched();
+
+    requestAnimationFrame(() => {
+      element?.focus();
+      const nextPosition = start + token.length;
+      element?.setSelectionRange(nextPosition, nextPosition);
+    });
+  }
+
+  variableTooltip(option: FieldVariableOption): string {
+    const preview = option.previewMaskedValue || option.previewValue || '';
+    const parts = [
+      option.description,
+      `${option.scope}${option.category ? ` / ${option.category}` : ''}`,
+      preview ? `Preview: ${preview}` : '',
+      option.isSecret ? 'Secret' : '',
+    ];
+    return parts.filter(Boolean).join('\n');
   }
 
   // ---- ARIA helpers ----

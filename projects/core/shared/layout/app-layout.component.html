@@ -8,19 +8,40 @@
     </div>
 
     <mat-nav-list class="menu-list">
-      @for (item of menuItems; track item.route) {
-        <a
-          mat-list-item
-          [class.isDark]="isDark$ | async"
-          class="menu-link"
-          [routerLink]="item.route"
-          routerLinkActive="active"
-          [matTooltip]="!isOpen ? item.label : ''"
-          matTooltipPosition="right"
-        >
-          <mat-icon [color]="'primary'">{{ item.icon }}</mat-icon>
-          <span class="menu-label">{{ item.label | translate }}</span>
-        </a>
+      @for (item of menuItems; track item.key) {
+        <div class="menu-group">
+          <a
+            mat-list-item
+            [class.isDark]="isDark$ | async"
+            class="menu-link"
+            [routerLink]="item.route"
+            routerLinkActive="active"
+            [matTooltip]="(item.label | translate) ?? ''"
+            matTooltipPosition="below"
+          >
+            <mat-icon [color]="'primary'">{{ item.icon }}</mat-icon>
+            <span class="menu-label">{{ item.label | translate }}</span>
+          </a>
+
+          @if (item.children?.length) {
+            <div class="menu-children">
+              @for (child of item.children; track child.key) {
+                <a
+                  mat-list-item
+                  [class.isDark]="isDark$ | async"
+                  class="menu-link menu-link--child"
+                  [routerLink]="child.route"
+                  routerLinkActive="active"
+                  [matTooltip]="(child.label | translate) ?? ''"
+                  matTooltipPosition="below"
+                >
+                  <mat-icon [color]="'primary'">{{ child.icon || 'chat_bubble' }}</mat-icon>
+                  <span class="menu-label">{{ child.label | translate }}</span>
+                </a>
+              }
+            </div>
+          }
+        </div>
       }
     </mat-nav-list>
 
