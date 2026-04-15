@@ -24,6 +24,8 @@ export {
   type FieldComponent,
   type FieldConfig,
   type FieldType,
+  type FieldVariableOption,
+  type FieldVariablePickerConfig,
   type FileVM,
 } from './field-config.model';
 export { type AuthProfile, type AuthRuntimeConfig } from './keycloack.model';

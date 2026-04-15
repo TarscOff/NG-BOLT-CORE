@@ -22,6 +22,26 @@ export interface FieldComponent<T = unknown> {
   control: import('@angular/forms').AbstractControl<T>;
 }
 
+export interface FieldVariableOption {
+  id?: string;
+  key: string;
+  token: string;
+  scope: 'system' | 'project' | 'user' | string;
+  category?: string;
+  type?: string;
+  name?: string;
+  description?: string;
+  previewValue?: string;
+  previewMaskedValue?: string;
+  isSecret?: boolean;
+}
+
+export interface FieldVariablePickerConfig {
+  enabled?: boolean;
+  label?: string;
+  options?: FieldVariableOption[];
+}
+
 export type FileVariant = 'input' | 'dropzone' | 'both';
 export interface FileVM {
   key: string;
@@ -71,4 +91,5 @@ export interface FieldConfig {
   maxFileSize?: number;
   maxTotalSize?: number;
   fileVariant?: FileVariant;
+  variablePicker?: FieldVariablePickerConfig;
 }

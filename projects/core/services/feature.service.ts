@@ -22,6 +22,7 @@ export class FeatureService {
 
   // keep normalized variants locally if there’s no store
   private variantsSig = signal<Record<string, VariantValue>>({});
+  private dynamicNavItemsSig = signal<FeatureNavItem[]>([]);
 
   // expose a reactive list of visible features
   public readonly visibleFeaturesSig = computed<FeatureNavItem[]>(() => {
@@ -32,9 +33,9 @@ export class FeatureService {
       if (!this.passes(f as AppFeature, u)) continue;
       const af = f as AppFeature;
       if (!af.label) continue;
-      out.push({ key, label: af.label, icon: af.icon, route: af.route });
+      out.push({ key, label: af.label, icon: af.icon, route: af.route, source: 'config' });
     }
-    return out;
+    return this.mergeNavigationItems(out, this.dynamicNavItemsSig());
   });
 
   private get hasKeycloak(): boolean {
@@ -58,6 +59,17 @@ export class FeatureService {
 
   setUser(user: UserCtx | null) {
     this.userSig.set(user);
+  }
+
+  setDynamicNavItems(items: FeatureNavItem[]): void {
+    const normalized = (items ?? [])
+      .filter((item) => !!item?.key && !!item?.label)
+      .map((item) => this.markDynamicNavItem(item));
+    this.dynamicNavItemsSig.set(normalized);
+  }
+
+  clearDynamicNavItems(): void {
+    this.dynamicNavItemsSig.set([]);
   }
 
   isEnabled(key: string, user?: UserCtx): boolean {
@@ -106,6 +118,34 @@ export class FeatureService {
 
     if (why.length) console.warn('[feature blocked]', f, { user, why });
     return true;
+  }
+
+  private mergeNavigationItems(
+    configItems: FeatureNavItem[],
+    dynamicItems: FeatureNavItem[],
+  ): FeatureNavItem[] {
+    const byKeyOrRoute = new Map<string, FeatureNavItem>();
+    const add = (item: FeatureNavItem) => {
+      const identity = item.route?.trim() || item.key;
+      if (!identity) return;
+      byKeyOrRoute.set(identity, item);
+    };
+
+    configItems.forEach(add);
+    dynamicItems
+      .slice()
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      .forEach(add);
+
+    return Array.from(byKeyOrRoute.values());
+  }
+
+  private markDynamicNavItem(item: FeatureNavItem): FeatureNavItem {
+    return {
+      ...item,
+      source: 'dynamic' as const,
+      children: item.children?.map((child) => this.markDynamicNavItem(child)),
+    };
   }
 }
 
