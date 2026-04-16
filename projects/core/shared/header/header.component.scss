@@ -1,0 +1,361 @@
+// ═══════════════════════════════════════════════════════════════
+//  HEADER COMPONENT
+//  `normal` variant → transparent fixed header (landing pages)
+//  `app`    variant → toolbar inside AppLayoutComponent
+// ═══════════════════════════════════════════════════════════════
+
+$transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+$header-h: 68px;
+$radius-sm: 10px;
+
+// ─────────────────────────────────────────────────────────────
+// NORMAL VARIANT — ROOT
+// ─────────────────────────────────────────────────────────────
+
+.header {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  z-index: 1000;
+  height: $header-h;
+  transition:
+    background $transition,
+    box-shadow $transition,
+    backdrop-filter $transition;
+
+  &--normal {
+    background: transparent;
+
+    &.header--scrolled {
+      background: color-mix(in srgb, var(--mat-primary) 4%, white);
+      backdrop-filter: blur(20px) saturate(180%);
+      box-shadow: 0 4px 24px color-mix(in srgb, var(--mat-primary) 15%, transparent);
+
+      .header-logo-name {
+        opacity: 1;
+      }
+    }
+  }
+}
+
+html.dark .header--normal.header--scrolled {
+  background: color-mix(in srgb, var(--mat-primary) 8%, black);
+}
+
+// ─────────────────────────────────────────────────────────────
+// NORMAL — INNER WRAPPER
+// ─────────────────────────────────────────────────────────────
+
+.header-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+// ─────────────────────────────────────────────────────────────
+// NORMAL — LOGO
+// ─────────────────────────────────────────────────────────────
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-decoration: none;
+  color: inherit;
+  flex-shrink: 0;
+}
+
+.header-logo-img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.header-logo-name {
+  font-family: 'ProximusBold', sans-serif;
+  font-size: 1rem;
+  white-space: nowrap;
+  background: linear-gradient(135deg, var(--mat-primary), var(--mat-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transition: opacity $transition;
+
+  @media (max-width: 479px) {
+    display: none;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// NORMAL — DESKTOP NAV
+// ─────────────────────────────────────────────────────────────
+
+.header-nav {
+  display: flex;
+  gap: 0.25rem;
+
+  @media (max-width: 767px) {
+    display: none;
+  }
+}
+
+.header-nav-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'ProximusRegular', sans-serif;
+  font-size: 0.9375rem;
+  color: color-mix(in srgb, var(--mat-primary) 25%, black);
+  padding: 0.5rem 0.875rem;
+  border-radius: $radius-sm;
+  transition:
+    background $transition,
+    color $transition;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in srgb, var(--mat-primary) 10%, transparent);
+    color: var(--mat-primary);
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-primary);
+    outline-offset: 2px;
+  }
+}
+
+html.dark .header-nav-link {
+  color: color-mix(in srgb, var(--mat-primary) 6%, white);
+}
+
+.header-nav-chevron {
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+  transition: transform $transition;
+}
+
+// ─────────────────────────────────────────────────────────────
+// NORMAL — ACTIONS BAR
+// ─────────────────────────────────────────────────────────────
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+
+  @media (max-width: 767px) {
+    display: none;
+  }
+}
+
+.header-icon-btn {
+  color: color-mix(in srgb, var(--mat-primary) 25%, black) !important;
+  opacity: 0.75;
+  transition: opacity $transition;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+html.dark .header-icon-btn {
+  color: color-mix(in srgb, var(--mat-primary) 6%, white) !important;
+}
+
+.header-login-btn {
+  margin-left: 0.5rem;
+  border-radius: $radius-sm !important;
+  font-family: 'ProximusBold', sans-serif !important;
+  letter-spacing: 0.03em;
+
+  .mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// NORMAL — HAMBURGER (mobile only)
+// ─────────────────────────────────────────────────────────────
+
+.header-hamburger {
+  display: none;
+  margin-left: auto;
+  color: color-mix(in srgb, var(--mat-primary) 25%, black) !important;
+
+  @media (max-width: 767px) {
+    display: flex;
+  }
+}
+
+html.dark .header-hamburger {
+  color: color-mix(in srgb, var(--mat-primary) 6%, white) !important;
+}
+
+// ─────────────────────────────────────────────────────────────
+// NORMAL — MOBILE MENU
+// ─────────────────────────────────────────────────────────────
+
+.header-mobile {
+  position: absolute;
+  top: $header-h;
+  inset-inline: 0;
+  background: color-mix(in srgb, var(--mat-primary) 4%, white);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid color-mix(in srgb, var(--mat-primary) 10%, transparent);
+  padding: 1rem 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  animation: headerSlideDown 0.25s ease;
+  box-shadow: 0 4px 24px color-mix(in srgb, var(--mat-primary) 15%, transparent);
+}
+
+html.dark .header-mobile {
+  background: color-mix(in srgb, var(--mat-primary) 8%, black);
+  border-bottom-color: color-mix(in srgb, var(--mat-primary) 18%, transparent);
+  box-shadow: 0 4px 24px color-mix(in srgb, var(--mat-primary) 35%, transparent);
+}
+
+.header-mobile-group {
+  font-family: 'ProximusBold', sans-serif;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--mat-primary);
+  padding: 0.75rem 1rem 0.25rem;
+}
+
+.header-mobile-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'ProximusRegular', sans-serif;
+  font-size: 1rem;
+  color: color-mix(in srgb, var(--mat-primary) 25%, black);
+  padding: 0.875rem 1rem;
+  border-radius: $radius-sm;
+  text-align: left;
+  transition: background $transition;
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in srgb, var(--mat-primary) 10%, transparent);
+    color: var(--mat-primary);
+    outline: none;
+  }
+
+  .mat-icon {
+    color: var(--mat-primary);
+  }
+}
+
+html.dark .header-mobile-link {
+  color: color-mix(in srgb, var(--mat-primary) 6%, white);
+}
+
+.header-mobile-login {
+  margin-top: 0.75rem;
+  width: 100%;
+  border-radius: $radius-sm !important;
+}
+
+// ─────────────────────────────────────────────────────────────
+// APP VARIANT — TOOLBAR
+// Uses the same selectors as the original app-layout toolbar
+// ─────────────────────────────────────────────────────────────
+
+app-header mat-toolbar {
+  display: flex;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  transition: all 0.3s ease-in-out;
+  background-color: transparent;
+
+  &.scrolled {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    &::before {
+      content: '';
+      background: var(--md-sys-color-surface);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 1;
+      z-index: -1;
+    }
+  }
+}
+
+.title-breadcrumb {
+  margin-left: 15px;
+}
+
+.title {
+  font-weight: 600;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.custom-btns {
+  display: flex;
+  align-items: center;
+
+  button {
+    margin: 0 8px;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// ANIMATIONS
+// ─────────────────────────────────────────────────────────────
+
+@keyframes headerSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// REDUCED MOTION
+// ─────────────────────────────────────────────────────────────
+
+@media (prefers-reduced-motion: reduce) {
+  .header,
+  .header-nav-link,
+  .header-icon-btn,
+  .header-mobile-link,
+  app-header mat-toolbar {
+    transition: none !important;
+  }
+  .header-mobile {
+    animation: none !important;
+  }
+}
