@@ -1,4 +1,4 @@
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -7,7 +7,6 @@ import {
   inject,
   Input,
   Output,
-  PLATFORM_ID,
   signal,
   ViewEncapsulation,
 } from '@angular/core';
@@ -58,7 +57,6 @@ import { BreadcrumbComponent } from '../breadcrumb/breadcrumb.component';
   encapsulation: ViewEncapsulation.None,
 })
 export class HeaderComponent {
-  private readonly platformId = inject(PLATFORM_ID);
   private readonly router = inject(Router);
   private readonly store = inject(Store);
   private readonly translate = inject(TranslateService);
@@ -151,7 +149,6 @@ export class HeaderComponent {
   @HostListener('window:scroll')
   onScroll(): void {
     if (this.variant !== 'normal') return;
-    if (!isPlatformBrowser(this.platformId)) return;
     this.isScrolled.set(window.scrollY > this.scrollThreshold);
   }
 
