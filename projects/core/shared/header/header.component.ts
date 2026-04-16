@@ -82,7 +82,7 @@ export class HeaderComponent {
   );
 
   login(): void {
-    this.kc.login();
+    void this.kc.login();
   }
 
   logout(): void {
@@ -157,7 +157,7 @@ export class HeaderComponent {
       if (link.url.startsWith('http')) {
         window.open(link.url, '_blank', 'noopener');
       } else {
-        this.router.navigateByUrl(link.url);
+        void this.router.navigateByUrl(link.url);
       }
     } else {
       this.navLinkClick.emit(link.target ?? link.label);
