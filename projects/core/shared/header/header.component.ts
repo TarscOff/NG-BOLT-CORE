@@ -22,25 +22,11 @@ import { Store } from '@ngrx/store';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { BreadcrumbItem } from '@cadai/pxs-ng-core/interfaces';
+import { HeaderLanguage, HeaderNavLink } from '@cadai/pxs-ng-core/interfaces';
 import { KeycloakService, ToolbarActionsService } from '@cadai/pxs-ng-core/services';
 import { AppActions, AppSelectors } from '@cadai/pxs-ng-core/store';
 
 import { BreadcrumbComponent } from '../breadcrumb/breadcrumb.component';
-
-export interface HeaderNavLink {
-  label: string;
-  /** Target section ID for scroll-to behaviour */
-  target?: string;
-  /** Route path (e.g. '/dashboard') or external URL (https://…) for navigation */
-  url?: string;
-  icon?: string;
-  children?: HeaderNavLink[];
-}
-
-export interface HeaderLanguage {
-  code: string;
-  label: string;
-}
 
 /**
  * Reusable header component with two variants:

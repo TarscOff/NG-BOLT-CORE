@@ -13,11 +13,7 @@ export { SelectComponent } from './forms/fields/select/select.component';
 export { TextFieldComponent } from './forms/fields/text-field/text-field.component';
 export { TextInputComponent } from './forms/fields/text-input/text-input.component';
 export { ToggleComponent } from './forms/fields/toggle/toggle.component';
-export {
-  HeaderComponent,
-  type HeaderLanguage,
-  type HeaderNavLink,
-} from './header/header.component';
+export { HeaderComponent } from './header/header.component';
 export { AppLayoutComponent } from './layout/app-layout.component';
 export { NotFoundComponent } from './not-found/not-found.component';
 export { SeoComponent } from './seo/seo.component';

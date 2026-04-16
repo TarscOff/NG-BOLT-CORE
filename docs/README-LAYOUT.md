@@ -1,21 +1,8 @@
 # Core SDK — Layout & Configuration Guide
 
-> _Last updated: 2026‑04‑15_
+> _Last updated: 2026‑04‑16_
 
 This document explains how to configure and use the **`AppLayoutComponent`** from the Core SDK, including:
-
----
-
-## What changed — HeaderComponent (2026‑04‑15)
-
-- **`PageHeaderComponent` replaced by `HeaderComponent`** with `variant="normal" | "app"`.
-- **Auth, theme, and language** are handled internally — no bindings needed from the parent.
-- **`ToolbarActionsService`** is now injected inside `HeaderComponent` (`variant="app"` only) — removed from `AppLayoutComponent`.
-- **`HeaderNavLink`** extended with `url` for route or external navigation.
-- **`scrollThreshold`** added as configurable input (default `60`).
-- **All display strings** are `@Input()` i18n keys defaulting to `header.*` — override per instance if needed.
-
----
 
 - **Dynamic logo configuration** from the hosting app
 - **Dynamic toolbar actions** (e.g., Back, Export, Delete) that each routed page can publish
@@ -36,6 +23,19 @@ Works with **Angular 16–19+**, standalone components, Material 3, NgRx, and ng
 4. [Dynamic Breadcrumbs](#4-dynamic-breadcrumbs)
 5. [Navigation Menu](#5-navigation-menu)
 6. [API Reference](#6-api-reference)
+
+---
+
+## HeaderComponent
+
+The layout uses a generic `HeaderComponent` (selector: `app-header`) with two variants controlled by `[variant]`.
+
+| Variant            | Use case                                                                                                                                                  |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `variant="app"`    | Toolbar inside `AppLayoutComponent` for pages within the layout. Injects `ToolbarActionsService` and `LayoutService` directly — no extra bindings needed. |
+| `variant="normal"` | Standalone public/landing header with nav links, language switcher, theme toggle, and login/logout.                                                       |
+
+Both variants manage **auth, theme, and language** internally via the NgRx store.
 
 ---
 
