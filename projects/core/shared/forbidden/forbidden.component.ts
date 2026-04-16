@@ -44,7 +44,9 @@ export class ForbiddenComponent {
   }
 
   login() {
-    void this.kc.login();
+    this.kc.login().catch((err) => {
+      console.error('[AUTH] Login faile', err);
+    });
   }
 
   public onTitleChange(title: string): void {

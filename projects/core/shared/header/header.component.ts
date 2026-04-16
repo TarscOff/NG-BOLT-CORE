@@ -82,7 +82,9 @@ export class HeaderComponent {
   );
 
   login(): void {
-    void this.kc.login();
+    this.kc.login().catch((err) => {
+      console.error('[AUTH] Login faile', err);
+    });
   }
 
   logout(): void {
@@ -152,17 +154,23 @@ export class HeaderComponent {
     this.isScrolled.set(window.scrollY > this.scrollThreshold);
   }
 
-  onNavClick(link: HeaderNavLink): void {
-    if (link.url) {
-      if (link.url.startsWith('http')) {
-        window.open(link.url, '_blank', 'noopener');
+  async onNavClick(link: HeaderNavLink): Promise<void> {
+    try {
+      if (link.url) {
+        if (link.url.startsWith('http')) {
+          window.open(link.url, '_blank', 'noopener');
+        } else {
+          const success = await this.router.navigateByUrl(link.url);
+          if (!success) {
+            console.error('[HEADER_REDIRECT] - navigation failed');
+          }
+        }
       } else {
-        void this.router.navigateByUrl(link.url);
+        this.navLinkClick.emit(link.target ?? link.label);
       }
-    } else {
-      this.navLinkClick.emit(link.target ?? link.label);
+    } finally {
+      this.menuOpen.set(false);
     }
-    this.menuOpen.set(false);
   }
 
   toggleMobileMenu(): void {
