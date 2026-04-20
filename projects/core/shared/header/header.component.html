@@ -6,6 +6,7 @@
     class="header"
     [class.header--normal]="true"
     [class.header--scrolled]="isScrolled()"
+    [class.header--menu-open]="menuOpen()"
     role="banner"
   >
     <div class="header-inner">
@@ -16,27 +17,62 @@
       </a>
 
       <!-- Desktop nav -->
-      <nav class="header-nav" [attr.aria-label]="navAriaLabel | translate">
-        @for (link of navLinks; track link.label) {
+      <nav class="header-nav" [attr.aria-label]="navAriaLabel | translate" role="menubar">
+        @for (link of navLinks; track link.label; let i = $index) {
           @if (link.children && link.children.length) {
-            <button class="header-nav-link" [matMenuTriggerFor]="subMenu">
-              {{ link.label | translate }}
-              <mat-icon class="header-nav-chevron">expand_more</mat-icon>
-            </button>
-            <mat-menu #subMenu="matMenu">
-              @for (child of link.children; track child.label) {
-                <button mat-menu-item (click)="onNavClick(child)">
-                  @if (child.icon) {
-                    <mat-icon>{{ child.icon }}</mat-icon>
-                  }
-                  {{ child.label | translate }}
-                </button>
+            <div
+              class="header-nav-item"
+              (mouseenter)="openMegaMenu(i)"
+              (mouseleave)="closeMegaMenu()"
+            >
+              <button
+                class="header-nav-link"
+                role="menuitem"
+                [attr.aria-haspopup]="true"
+                [attr.aria-expanded]="activeMegaMenu() === i"
+                (keydown.enter)="toggleMegaMenu(i)"
+                (keydown.space)="toggleMegaMenu(i); $event.preventDefault()"
+                (keydown.escape)="closeMegaMenu()"
+              >
+                {{ link.label | translate }}
+                <mat-icon
+                  class="header-nav-chevron"
+                  [class.header-nav-chevron--open]="activeMegaMenu() === i"
+                  >expand_more</mat-icon
+                >
+              </button>
+
+              @if (activeMegaMenu() === i) {
+                <div class="header-mega" [class.header-mega--scrolled]="isScrolled()" role="menu">
+                  <div class="header-mega-inner">
+                    @for (child of link.children; track child.label) {
+                      <a
+                        class="header-mega-link"
+                        role="menuitem"
+                        [href]="child.url ?? '#' + child.target"
+                        [target]="child.isUrlBlank ? '_blank' : '_self'"
+                        [attr.rel]="child.url ? 'noopener noreferrer' : null"
+                        (click)="closeMegaMenu()"
+                      >
+                        @if (child.icon) {
+                          <mat-icon class="header-mega-icon">{{ child.icon }}</mat-icon>
+                        }
+                        <span>{{ child.label | translate }}</span>
+                      </a>
+                    }
+                  </div>
+                </div>
               }
-            </mat-menu>
+            </div>
           } @else {
-            <button class="header-nav-link" (click)="onNavClick(link)">
-              {{ link.label | translate }}
-            </button>
+            <a
+              class="header-nav-link"
+              role="menuitem"
+              [href]="link.url ?? '#' + link.target"
+              [target]="link.isUrlBlank ? '_blank' : '_self'"
+              [attr.rel]="link.url ? 'noopener noreferrer' : null"
+              >{{ link.label | translate }}</a
+            >
           }
         }
       </nav>
@@ -75,17 +111,7 @@
           <mat-icon>{{ isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
         </button>
 
-        @if (isAuthenticated()) {
-          <button mat-stroked-button class="header-login-btn" (click)="logout()">
-            <mat-icon>logout</mat-icon>
-            {{ logoutLabel | translate }}
-          </button>
-        } @else {
-          <button mat-raised-button color="primary" class="header-login-btn" (click)="login()">
-            <mat-icon>login</mat-icon>
-            {{ loginLabel | translate }}
-          </button>
-        }
+        <ng-container *ngTemplateOutlet="actionsTemplate"></ng-container>
       </div>
 
       <!-- Hamburger (mobile only) -->
@@ -102,47 +128,95 @@
     </div>
 
     <!-- Mobile nav drawer -->
-    @if (menuOpen()) {
-      <div
-        id="header-mobile-menu"
-        class="header-mobile"
-        role="navigation"
-        [attr.aria-label]="navMobileAriaLabel | translate"
-      >
-        @for (link of navLinks; track link.label) {
-          @if (link.children && link.children.length) {
-            <span class="header-mobile-group">{{ link.label | translate }}</span>
-            @for (child of link.children; track child.label) {
-              <button class="header-mobile-link" (click)="onNavClick(child)">
-                @if (child.icon) {
-                  <mat-icon>{{ child.icon }}</mat-icon>
-                }
-                {{ child.label | translate }}
+    <div
+      id="header-mobile-menu"
+      class="header-mobile"
+      [class.header-mobile--open]="menuOpen()"
+      role="navigation"
+      [attr.aria-hidden]="!menuOpen() || null"
+      [attr.aria-label]="navMobileAriaLabel | translate"
+    >
+      @for (link of navLinks; track link.label; let i = $index) {
+        @if (link.children && link.children.length) {
+          <button
+            class="header-mobile-accordion"
+            [attr.aria-expanded]="expandedGroups().has(i)"
+            (click)="toggleMobileGroup(i)"
+          >
+            @if (link.icon) {
+              <mat-icon>{{ link.icon }}</mat-icon>
+            }
+            <span>{{ link.label | translate }}</span>
+            <mat-icon
+              class="header-mobile-chevron"
+              [class.header-mobile-chevron--open]="expandedGroups().has(i)"
+              >expand_more</mat-icon
+            >
+          </button>
+
+          @if (expandedGroups().has(i)) {
+            <div class="header-mobile-accordion-body" role="group">
+              @for (child of link.children; track child.label) {
+                <a
+                  class="header-mobile-link"
+                  [href]="child.url ?? '#' + child.target"
+                  [target]="child.isUrlBlank ? '_blank' : '_self'"
+                  [attr.rel]="child.url ? 'noopener noreferrer' : null"
+                  (click)="menuOpen.set(false)"
+                >
+                  @if (child.icon) {
+                    <mat-icon>{{ child.icon }}</mat-icon>
+                  }
+                  {{ child.label | translate }}
+                </a>
+              }
+            </div>
+          }
+        } @else {
+          <a
+            class="header-mobile-link"
+            [href]="link.url ?? '#' + link.target"
+            [target]="link.isUrlBlank ? '_blank' : '_self'"
+            [attr.rel]="link.url ? 'noopener noreferrer' : null"
+            (click)="menuOpen.set(false)"
+          >
+            @if (link.icon) {
+              <mat-icon>{{ link.icon }}</mat-icon>
+            }
+            {{ link.label | translate }}
+          </a>
+        }
+      }
+
+      <!-- Mobile — language & theme controls -->
+      <div class="header-mobile-controls">
+        @if (languages.length) {
+          <div class="header-mobile-lang">
+            @for (lang of languages; track lang.code) {
+              <button
+                class="header-mobile-lang-btn"
+                [class.header-mobile-lang-btn--active]="currentLang() === lang.code"
+                (click)="switchLang(lang.code)"
+                [attr.aria-current]="currentLang() === lang.code ? 'true' : null"
+              >
+                {{ lang.label }}
               </button>
             }
-          } @else {
-            <button class="header-mobile-link" (click)="onNavClick(link)">
-              @if (link.icon) {
-                <mat-icon>{{ link.icon }}</mat-icon>
-              }
-              {{ link.label | translate }}
-            </button>
-          }
+          </div>
         }
 
-        @if (isAuthenticated()) {
-          <button mat-flat-button class="header-mobile-login" (click)="logout()">
-            <mat-icon>logout</mat-icon>
-            {{ logoutLabel | translate }}
-          </button>
-        } @else {
-          <button mat-flat-button color="primary" class="header-mobile-login" (click)="login()">
-            <mat-icon>login</mat-icon>
-            {{ loginLabel | translate }}
-          </button>
-        }
+        <button
+          mat-icon-button
+          class="header-icon-btn"
+          (click)="toggleTheme()"
+          [attr.aria-label]="(isDark() ? themeToLightAriaLabel : themeToDarkAriaLabel) | translate"
+        >
+          <mat-icon>{{ isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+        </button>
       </div>
-    }
+
+      <ng-container *ngTemplateOutlet="actionsTemplate"></ng-container>
+    </div>
   </header>
 }
 
