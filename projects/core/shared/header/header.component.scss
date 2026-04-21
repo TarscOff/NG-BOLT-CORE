@@ -4,7 +4,7 @@
 //  `app`    variant → toolbar inside AppLayoutComponent
 // ═══════════════════════════════════════════════════════════════
 
-$transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+$transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 $header-h: 68px;
 $radius-sm: 10px;
 
@@ -35,11 +35,33 @@ $radius-sm: 10px;
         opacity: 1;
       }
     }
+
+    @media (max-width: 767px) {
+      &.header--menu-open {
+        background: color-mix(in srgb, var(--mat-primary) 4%, white);
+        backdrop-filter: blur(20px) saturate(180%);
+
+        .header-logo-name {
+          opacity: 1;
+        }
+      }
+    }
   }
+}
+
+// Offset anchor scroll targets so fixed header doesn't cover them
+html:has(.header--normal) {
+  scroll-padding-top: $header-h;
 }
 
 html.dark .header--normal.header--scrolled {
   background: color-mix(in srgb, var(--mat-primary) 8%, black);
+}
+
+html.dark .header--normal.header--menu-open {
+  @media (max-width: 767px) {
+    background: color-mix(in srgb, var(--mat-primary) 8%, black);
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -97,11 +119,19 @@ html.dark .header--normal.header--scrolled {
 
 .header-nav {
   display: flex;
+  align-items: stretch;
+  align-self: stretch;
   gap: 0.25rem;
 
   @media (max-width: 767px) {
     display: none;
   }
+}
+
+.header-nav-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
 }
 
 .header-nav-link {
@@ -113,24 +143,26 @@ html.dark .header--normal.header--scrolled {
   color: color-mix(in srgb, var(--mat-primary) 25%, black);
   padding: 0.5rem 0.875rem;
   border-radius: $radius-sm;
-  transition:
-    background $transition,
-    color $transition;
+  transition: color $transition;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
+  text-decoration: none;
 
   &:hover,
   &:focus-visible {
-    background: color-mix(in srgb, var(--mat-primary) 10%, transparent);
     color: var(--mat-primary);
-    outline: none;
+    text-decoration: underline;
   }
 
   &:focus-visible {
     outline: 2px solid var(--mat-primary);
     outline-offset: 2px;
+  }
+
+  &::before {
+    display: none;
   }
 }
 
@@ -143,6 +175,106 @@ html.dark .header-nav-link {
   width: 18px !important;
   height: 18px !important;
   transition: transform $transition;
+
+  &--open {
+    transform: rotate(180deg);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// NORMAL — MEGA-SUBMENU (full-width dropdown on hover)
+// ─────────────────────────────────────────────────────────────
+
+.header-mega {
+  position: fixed;
+  top: $header-h;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  background: color-mix(in srgb, white 20%, transparent);
+  backdrop-filter: blur(24px) saturate(200%);
+  border-bottom: 1px solid color-mix(in srgb, var(--mat-primary) 6%, transparent);
+  box-shadow:
+    0 8px 32px color-mix(in srgb, var(--mat-primary) 8%, transparent),
+    0 1px 0 color-mix(in srgb, white 60%, transparent) inset;
+  animation: megaSlideDown 0.2s ease;
+  transition:
+    background $transition,
+    box-shadow $transition,
+    border-color $transition;
+
+  &--scrolled {
+    background: color-mix(in srgb, var(--mat-primary) 4%, white);
+    backdrop-filter: blur(20px) saturate(180%);
+    border-bottom-color: color-mix(in srgb, var(--mat-primary) 10%, transparent);
+    box-shadow: 0 8px 32px color-mix(in srgb, var(--mat-primary) 12%, transparent);
+  }
+}
+
+html.dark .header-mega {
+  background: color-mix(in srgb, black 72%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--mat-primary) 12%, transparent);
+  box-shadow: 0 8px 32px color-mix(in srgb, black 40%, transparent);
+}
+
+html.dark .header-mega--scrolled {
+  background: color-mix(in srgb, var(--mat-primary) 8%, black);
+  border-bottom-color: color-mix(in srgb, var(--mat-primary) 18%, transparent);
+  box-shadow: 0 8px 32px color-mix(in srgb, var(--mat-primary) 25%, transparent);
+}
+
+.header-mega-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem;
+  display: grid;
+  grid-template-rows: repeat(4, auto);
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(200px, max-content);
+  justify-content: start;
+  gap: 0.25rem 0.5rem;
+}
+
+.header-mega-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: $radius-sm;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'ProximusRegular', sans-serif;
+  font-size: 1rem;
+  color: color-mix(in srgb, var(--mat-primary) 25%, black);
+  text-decoration: none;
+  text-align: left;
+  white-space: nowrap;
+  transition:
+    background $transition,
+    color $transition;
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in srgb, var(--mat-primary) 8%, transparent);
+    color: var(--mat-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-primary);
+    outline-offset: -2px;
+  }
+}
+
+html.dark .header-mega-link {
+  color: color-mix(in srgb, var(--mat-primary) 6%, white);
+}
+
+.header-mega-icon {
+  color: var(--mat-primary);
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -192,12 +324,12 @@ html.dark .header-icon-btn {
 // ─────────────────────────────────────────────────────────────
 
 .header-hamburger {
-  display: none;
+  display: none !important;
   margin-left: auto;
   color: color-mix(in srgb, var(--mat-primary) 25%, black) !important;
 
   @media (max-width: 767px) {
-    display: flex;
+    display: flex !important;
   }
 }
 
@@ -207,36 +339,108 @@ html.dark .header-hamburger {
 
 // ─────────────────────────────────────────────────────────────
 // NORMAL — MOBILE MENU
+// Uses opacity + translateY for smooth open/close without
+// content reflow. Children keep their full size at all times.
 // ─────────────────────────────────────────────────────────────
 
 .header-mobile {
   position: absolute;
   top: $header-h;
   inset-inline: 0;
+  padding: 1rem 1.5rem 1.5rem;
   background: color-mix(in srgb, var(--mat-primary) 4%, white);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid color-mix(in srgb, var(--mat-primary) 10%, transparent);
-  padding: 1rem 1.5rem 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  animation: headerSlideDown 0.25s ease;
-  box-shadow: 0 4px 24px color-mix(in srgb, var(--mat-primary) 15%, transparent);
+  gap: 0.125rem;
+
+  // Hidden state
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity $transition,
+    visibility 0s linear 0.3s,
+    background $transition;
+
+  // Open state
+  &--open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition:
+      opacity $transition,
+      visibility 0s linear,
+      background $transition;
+  }
 }
 
 html.dark .header-mobile {
   background: color-mix(in srgb, var(--mat-primary) 8%, black);
-  border-bottom-color: color-mix(in srgb, var(--mat-primary) 18%, transparent);
-  box-shadow: 0 4px 24px color-mix(in srgb, var(--mat-primary) 35%, transparent);
 }
 
-.header-mobile-group {
+// ─────────────────────────────────────────────────────────────
+// MOBILE — NAV ITEMS
+// ─────────────────────────────────────────────────────────────
+
+.header-mobile-accordion {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
   font-family: 'ProximusBold', sans-serif;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--mat-primary);
-  padding: 0.75rem 1rem 0.25rem;
+  font-size: 1rem;
+  color: color-mix(in srgb, var(--mat-primary) 25%, black);
+  padding: 0.875rem 1rem;
+  border-radius: $radius-sm;
+  text-align: left;
+  transition: background $transition;
+
+  > span {
+    flex: 1;
+  }
+
+  .mat-icon:first-child {
+    color: var(--mat-primary);
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in srgb, var(--mat-primary) 10%, transparent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-primary);
+    outline-offset: -2px;
+  }
+}
+
+html.dark .header-mobile-accordion {
+  color: color-mix(in srgb, var(--mat-primary) 6%, white);
+}
+
+.header-mobile-chevron {
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+  transition: transform $transition;
+  margin-left: auto;
+
+  &--open {
+    transform: rotate(180deg);
+  }
+}
+
+.header-mobile-accordion-body {
+  padding-left: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  animation: accordionExpand 0.25s ease;
 }
 
 .header-mobile-link {
@@ -252,13 +456,20 @@ html.dark .header-mobile {
   padding: 0.875rem 1rem;
   border-radius: $radius-sm;
   text-align: left;
-  transition: background $transition;
+  text-decoration: none;
+  transition:
+    background $transition,
+    color $transition;
 
   &:hover,
   &:focus-visible {
     background: color-mix(in srgb, var(--mat-primary) 10%, transparent);
     color: var(--mat-primary);
-    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-primary);
+    outline-offset: -2px;
   }
 
   .mat-icon {
@@ -270,15 +481,59 @@ html.dark .header-mobile-link {
   color: color-mix(in srgb, var(--mat-primary) 6%, white);
 }
 
-.header-mobile-login {
+// ─────────────────────────────────────────────────────────────
+// MOBILE — CONTROLS (language + theme)
+// ─────────────────────────────────────────────────────────────
+
+.header-mobile-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   margin-top: 0.75rem;
-  width: 100%;
-  border-radius: $radius-sm !important;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--mat-primary) 10%, transparent);
+}
+
+.header-mobile-lang {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.header-mobile-lang-btn {
+  background: none;
+  border: 1px solid color-mix(in srgb, var(--mat-primary) 20%, transparent);
+  border-radius: $radius-sm;
+  cursor: pointer;
+  font-family: 'ProximusRegular', sans-serif;
+  font-size: 0.875rem;
+  color: color-mix(in srgb, var(--mat-primary) 25%, black);
+  padding: 0.375rem 0.75rem;
+  transition:
+    background $transition,
+    color $transition,
+    border-color $transition;
+
+  &--active {
+    background: color-mix(in srgb, var(--mat-primary) 12%, transparent);
+    border-color: var(--mat-primary);
+    color: var(--mat-primary);
+    font-family: 'ProximusBold', sans-serif;
+  }
+
+  &:hover {
+    background: color-mix(in srgb, var(--mat-primary) 8%, transparent);
+    color: var(--mat-primary);
+  }
+}
+
+html.dark .header-mobile-lang-btn {
+  color: color-mix(in srgb, var(--mat-primary) 6%, white);
 }
 
 // ─────────────────────────────────────────────────────────────
 // APP VARIANT — TOOLBAR
-// Uses the same selectors as the original app-layout toolbar
 // ─────────────────────────────────────────────────────────────
 
 app-header mat-toolbar {
@@ -332,10 +587,21 @@ app-header mat-toolbar {
 // ANIMATIONS
 // ─────────────────────────────────────────────────────────────
 
-@keyframes headerSlideDown {
+@keyframes megaSlideDown {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes accordionExpand {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
   }
   to {
     opacity: 1;
@@ -351,11 +617,18 @@ app-header mat-toolbar {
   .header,
   .header-nav-link,
   .header-icon-btn,
+  .header-mobile,
   .header-mobile-link,
+  .header-mega-link,
+  .header-mobile-accordion,
+  .header-nav-chevron,
+  .header-mobile-chevron,
+  .header-mobile-lang-btn,
   app-header mat-toolbar {
     transition: none !important;
   }
-  .header-mobile {
+  .header-mega,
+  .header-mobile-accordion-body {
     animation: none !important;
   }
 }

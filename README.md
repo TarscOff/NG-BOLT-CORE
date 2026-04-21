@@ -20,6 +20,74 @@ This project was generated using [Angular CLI](https://github.com/angular/angula
 
 ---
 
+## 🔗 Testing Local Changes Without Publishing
+
+When you make changes to the core library and want to test them in a consumer app (e.g. `frontend-generic`) **before** going through CI/CD and the registry, use `npm link`.
+
+### Step 1 — Build the library
+
+```bash
+cd C:/path/to/PXS-NG-CORE
+npm run build:core
+```
+
+### Step 2 — Register the dist folder globally
+
+```bash
+cd dist/core
+npm link
+```
+
+### Step 3 — Link it into the consumer app
+
+```bash
+cd C:/path/to/your-project
+npm link @cadai/pxs-ng-core
+```
+
+### Step 4 — Fix the dual Angular instance issue
+
+Because `npm link` uses a symlink, the bundler may resolve Angular from two different `node_modules` and throw type errors (`DestroyRef`, `FormGroup`, etc.).
+
+Fix by adding `"preserveSymlinks": true` to the build options in `angular.json` of the consumer app:
+
+```json
+"build": {
+  "builder": "...",
+  "options": {
+    "preserveSymlinks": true,
+    ...
+  }
+}
+```
+
+### Rebuild after changes
+
+Each time you modify the core, just rebuild — the link stays active:
+
+```bash
+npm run build:core
+```
+
+And run this on
+
+```bash
+cd C:/path/to/frontend-generic
+ng cache clean && ng serve
+```
+
+### Unlinking — go back to the registry version
+
+```bash
+cd C:/path/to/frontend-generic
+npm unlink @cadai/pxs-ng-core
+npm install
+```
+
+And revert `"preserveSymlinks": true` from `angular.json` if you no longer need it.
+
+---
+
 ## 🧱 Project Overview
 
 This repository provides a scalable, production-ready **Angular 19** setup using best practices including:

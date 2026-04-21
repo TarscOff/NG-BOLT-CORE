@@ -3,6 +3,7 @@ export interface HeaderNavLink {
   /** Target section ID for scroll-to behaviour */
   target?: string;
   url?: string;
+  isUrlBlank?: boolean;
   icon?: string;
   children?: HeaderNavLink[];
 }

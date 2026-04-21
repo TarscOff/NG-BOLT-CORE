@@ -2,12 +2,14 @@ import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  ContentChild,
   EventEmitter,
   HostListener,
   inject,
   Input,
   Output,
   signal,
+  TemplateRef,
   ViewEncapsulation,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -83,7 +85,7 @@ export class HeaderComponent {
 
   login(): void {
     this.kc.login().catch((err) => {
-      console.error('[AUTH] Login faile', err);
+      console.error('[AUTH] Login failed', err);
     });
   }
 
@@ -117,8 +119,6 @@ export class HeaderComponent {
   // ═══════════════════════════════════════════════════════════
 
   @Input() navLinks: HeaderNavLink[] = [];
-  @Input() loginLabel = 'header.login';
-  @Input() logoutLabel = 'header.logout';
   @Input() langTooltip = 'header.lang.tooltip';
   @Input() langAriaLabel = 'header.lang.select';
   @Input() langMenuAriaLabel = 'header.lang.menu';
@@ -129,6 +129,8 @@ export class HeaderComponent {
   @Input() themeToDarkAriaLabel = 'header.theme.toDark';
   @Input() scrollThreshold = 60;
   @Output() navLinkClick = new EventEmitter<string>();
+
+  @ContentChild('headerActions') actionsTemplate?: TemplateRef<unknown>;
 
   // ═══════════════════════════════════════════════════════════
   // APP VARIANT INPUTS
@@ -147,6 +149,8 @@ export class HeaderComponent {
 
   readonly isScrolled = signal(false);
   readonly menuOpen = signal(false);
+  readonly activeMegaMenu = signal<number | null>(null);
+  readonly expandedGroups = signal<Set<number>>(new Set());
 
   @HostListener('window:scroll')
   onScroll(): void {
@@ -171,6 +175,30 @@ export class HeaderComponent {
     } finally {
       this.menuOpen.set(false);
     }
+  }
+
+  openMegaMenu(index: number): void {
+    this.activeMegaMenu.set(index);
+  }
+
+  closeMegaMenu(): void {
+    this.activeMegaMenu.set(null);
+  }
+
+  toggleMegaMenu(index: number): void {
+    this.activeMegaMenu.update((v) => (v === index ? null : index));
+  }
+
+  toggleMobileGroup(index: number): void {
+    this.expandedGroups.update((set) => {
+      const next = new Set(set);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
+      return next;
+    });
   }
 
   toggleMobileMenu(): void {
