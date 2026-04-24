@@ -1,0 +1,20 @@
+.qs-content {
+  min-width: 320px;
+  padding-top: 8px;
+}
+
+.qs-body {
+  display: grid;
+  gap: 1rem;
+
+  .theme-selector {
+    display: block;
+  }
+}
+
+.qs-section-label {
+  margin: 4px 0 0;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--mat-accent);
+}

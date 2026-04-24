@@ -28,7 +28,12 @@ export {
   type FieldVariablePickerConfig,
   type FileVM,
 } from './field-config.model';
-export { type HeaderLanguage, type HeaderNavLink } from './header.interface';
+export {
+  type HeaderLanguage,
+  type HeaderLogo,
+  type HeaderNavFeaturedPanel,
+  type HeaderNavLink,
+} from './header.interface';
 export { type AuthProfile, type AuthRuntimeConfig } from './keycloack.model';
 export { type AppEvents, type RealtimeClient, type RealtimeEventMap } from './realtime.model';
 export {

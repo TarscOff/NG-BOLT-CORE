@@ -16,6 +16,7 @@ export { ToggleComponent } from './forms/fields/toggle/toggle.component';
 export { HeaderComponent } from './header/header.component';
 export { AppLayoutComponent } from './layout/app-layout.component';
 export { NotFoundComponent } from './not-found/not-found.component';
+export { QuickSettingsComponent } from './quick-settings/quick-settings.component';
 export { SeoComponent } from './seo/seo.component';
 export { SmartTableComponent } from './smart-table/smart-table.component';
 export type { ActionFormFactory, ActionFormSpec } from './workflows/action-forms';

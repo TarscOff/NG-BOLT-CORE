@@ -1,18 +1,17 @@
 <mat-sidenav-container class="app-container">
-  <mat-sidenav #sidenav mode="side" [(opened)]="isOpen" class="side-nav" [fixedInViewport]="true">
-    <div class="nav-title">
-      <a routerLink="/" role="link">
-        <img [src]="logoUrl" alt="Logo" class="logo" />
-        {{ 'navigationTitle' | translate }}
-      </a>
-    </div>
+  @if (showSidenav()) {
+    <mat-sidenav #sidenav mode="side" [(opened)]="isOpen" class="side-nav" [fixedInViewport]="true">
+      <div class="nav-title">
+        <a routerLink="/" role="link">
+          <img [src]="logoUrl" alt="Logo" class="logo" />
+          {{ 'navigationTitle' | translate }}
+        </a>
+      </div>
 
-    <mat-nav-list class="menu-list">
-      @for (item of menuItems; track item.key) {
-        <div class="menu-group">
+      <mat-nav-list class="menu-list">
+        @for (item of menuItems; track item.route) {
           <a
             mat-list-item
-            [class.isDark]="isDark$ | async"
             class="menu-link"
             [routerLink]="item.route"
             routerLinkActive="active"
@@ -22,132 +21,59 @@
             <mat-icon [color]="'primary'">{{ item.icon }}</mat-icon>
             <span class="menu-label">{{ item.label | translate }}</span>
           </a>
+        }
+      </mat-nav-list>
 
-          @if (item.children?.length) {
-            <div class="menu-children">
-              @for (child of item.children; track child.key) {
-                <a
-                  mat-list-item
-                  [class.isDark]="isDark$ | async"
-                  class="menu-link menu-link--child"
-                  [routerLink]="child.route"
-                  routerLinkActive="active"
-                  [matTooltip]="(child.label | translate) ?? ''"
-                  matTooltipPosition="below"
-                >
-                  <mat-icon [color]="'primary'">{{ child.icon || 'chat_bubble' }}</mat-icon>
-                  <span class="menu-label">{{ child.label | translate }}</span>
-                </a>
-              }
-            </div>
-          }
+      <!-- USER PANEL -->
+      @if (profile$ | async; as p) {
+        <div class="user-panel" [class.collapsed]="!isOpen">
+          <button
+            mat-button
+            class="user-trigger primary"
+            [matMenuTriggerFor]="userMenu"
+            [attr.aria-label]="displayName(p)"
+            [color]="'primary'"
+          >
+            <mat-icon class="avatar" [color]="'primary'">account_circle</mat-icon>
+            @if (isOpen) {
+              <div class="user-meta">
+                <div class="user-name">{{ displayName(p) }}</div>
+                <div class="user-email">{{ p.email }}</div>
+              </div>
+            }
+          </button>
+
+          <mat-menu #userMenu="matMenu">
+            @for (r of (roles$ | async) ?? []; track r) {
+              <p mat-menu-item>{{ r }}</p>
+            }
+            <button mat-menu-item (click)="logout()" class="primary">
+              <mat-icon>logout</mat-icon>
+              <span>{{ 'Logout' | translate }}</span>
+            </button>
+          </mat-menu>
         </div>
       }
-    </mat-nav-list>
 
-    <div class="switchers-trigger" [class.collapsed]="!isOpen">
-      <button
-        mat-button
-        class="quick-settings primary"
-        (click)="openSwitchers()"
-        matTooltip="{{ 'quick_settings' | translate }}"
-        [matTooltipPosition]="isOpen ? 'above' : 'right'"
-        aria-label="Open quick settings"
-      >
-        <mat-icon>tune</mat-icon>
-        @if (isOpen) {
-          <span class="btn-label">{{ 'quick_settings' | translate }}</span>
-        }
-      </button>
-    </div>
-
-    <!-- Dialog content -->
-    <ng-template #switchersTpl>
-      <div class="switchers-dialog">
-        <!-- Theme -->
-        <app-toggle
-          class="theme-selector"
-          [field]="themeField"
-          [control]="themeControl"
-        ></app-toggle>
-
-        <!-- Language -->
-        <app-select [field]="langField" [control]="langControl"></app-select>
-
-        @if (aiValueField.options && aiValueField.options.length > 0) {
-          <h3 class="section-label">{{ 'ai_settings' | translate }}</h3>
-        }
-
-        <!-- AI Scope / Key / Value -->
-        @if (
-          aiScopeField.options &&
-          aiScopeField.options.length > 0 &&
-          aiValueField.options &&
-          aiValueField.options.length > 0
-        ) {
-          <app-select [field]="aiScopeField" [control]="aiScopeControl"></app-select>
-        }
-        @if (
-          aiKeyField.options &&
-          aiKeyField.options.length > 0 &&
-          aiValueField.options &&
-          aiValueField.options.length > 0
-        ) {
-          <app-select [field]="aiKeyField" [control]="aiKeyControl"></app-select>
-        }
-        @if (aiValueField.options && aiValueField.options.length > 0) {
-          <app-select [field]="aiValueField" [control]="aiValueControl"></app-select>
-        }
+      <div class="version-wrapper">
+        <small class="version">v{{ version }}</small>
       </div>
-    </ng-template>
+    </mat-sidenav>
+  }
 
-    <!-- USER PANEL -->
-    @if (profile$ | async; as p) {
-      <div class="user-panel" [class.collapsed]="!isOpen">
-        <button
-          mat-button
-          class="user-trigger primary"
-          [matMenuTriggerFor]="userMenu"
-          [attr.aria-label]="displayName(p)"
-          [color]="'primary'"
-        >
-          <mat-icon class="avatar" [color]="'primary'">account_circle</mat-icon>
-          @if (isOpen) {
-            <div class="user-meta">
-              <div class="user-name">{{ displayName(p) }}</div>
-              <div class="user-email">{{ p.email }}</div>
-            </div>
-          }
-        </button>
-
-        <mat-menu #userMenu="matMenu">
-          @for (r of (roles$ | async) ?? []; track r) {
-            <p mat-menu-item>{{ r }}</p>
-          }
-          <button mat-menu-item (click)="logout()" class="primary">
-            <mat-icon>logout</mat-icon>
-            <span>{{ 'Logout' | translate }}</span>
-          </button>
-        </mat-menu>
-      </div>
-    }
-
-    <div class="version-wrapper">
-      <small class="version">v{{ version }}</small>
-    </div>
-  </mat-sidenav>
-
-  <mat-sidenav-content #sidenavContent>
+  <mat-sidenav-content>
     <app-header
-      variant="app"
+      [showMenuButton]="showSidenav()"
+      [logoData]="(logoData$ | async) ?? null"
       [title]="(title$ | async) ?? ''"
       [breadcrumbItems]="breadcrumbItems$ | async"
       [scrolled]="isScrolled"
-      (menuToggle)="sidenav.toggle()"
+      [navLinks]="headerNavLinks()"
+      (menuToggle)="toggleSidenav()"
     >
     </app-header>
 
-    <main class="app-content">
+    <main class="app-content" #sidenavContent>
       <router-outlet />
     </main>
   </mat-sidenav-content>
