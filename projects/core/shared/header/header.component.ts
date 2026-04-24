@@ -2,42 +2,34 @@ import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
-  ContentChild,
   EventEmitter,
-  HostListener,
   inject,
   Input,
   Output,
   signal,
-  TemplateRef,
   ViewEncapsulation,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { Router, RouterModule } from '@angular/router';
-import { Store } from '@ngrx/store';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core';
 
-import { BreadcrumbItem } from '@cadai/pxs-ng-core/interfaces';
-import { HeaderLanguage, HeaderNavLink } from '@cadai/pxs-ng-core/interfaces';
-import { KeycloakService, ToolbarActionsService } from '@cadai/pxs-ng-core/services';
-import { AppActions, AppSelectors } from '@cadai/pxs-ng-core/store';
+import { BreadcrumbItem, HeaderLogo, HeaderNavLink } from '@cadai/pxs-ng-core/interfaces';
+import { ToolbarActionsService } from '@cadai/pxs-ng-core/services';
 
 import { BreadcrumbComponent } from '../breadcrumb/breadcrumb.component';
 
 /**
- * Reusable header component with two variants:
+ * Header based on mat-toolbar.
  *
- * `variant="normal"` — transparent fixed header for public/landing pages;
- *  gains glass-blur on scroll; renders nav links with optional submenus,
- *  login button, language & theme toggles. Burger menu visible on mobile only.
+ * All buttons are provided via ToolbarActionsService -- nothing is hardcoded.
  *
- * `variant="app"` — toolbar for authenticated pages inside AppLayoutComponent;
- *  renders a menu toggle, page title, breadcrumbs, and dynamic toolbar actions.
+ * Inputs:
+ * - showMenuButton  -- hamburger that emits (menuToggle)
+ * - title / breadcrumbItems -- page context
+ * - navLinks -- desktop mega-menu + mobile drawer
  */
 @Component({
   selector: 'app-header',
@@ -51,7 +43,6 @@ import { BreadcrumbComponent } from '../breadcrumb/breadcrumb.component';
     MatToolbarModule,
     MatTooltipModule,
     BreadcrumbComponent,
-    RouterModule,
   ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss',
@@ -59,124 +50,37 @@ import { BreadcrumbComponent } from '../breadcrumb/breadcrumb.component';
   encapsulation: ViewEncapsulation.None,
 })
 export class HeaderComponent {
-  private readonly router = inject(Router);
-  private readonly store = inject(Store);
-  private readonly translate = inject(TranslateService);
-  private readonly kc = inject(KeycloakService);
+  // -- Feature flags --
+  @Input() showMenuButton = false;
 
-  // ── Variant ────────────────────────────────────────────────
-  @Input() variant: 'normal' | 'app' = 'normal';
-
-  // ═══════════════════════════════════════════════════════════
-  // SHARED INPUTS
-  // ═══════════════════════════════════════════════════════════
-
-  // ── Logo ───────────────────────────────────────────────────
-  @Input() logoSrc = '/assets/logo.png';
-  @Input() logoAlt = 'Proximus GenAI';
-  @Input() logoName = 'GenAI Platform';
-  @Input() logoHref = '/';
-
-  // ── Auth (internal — reads store, delegates to KeycloakService) ──
-  readonly isAuthenticated = toSignal(
-    this.store.select(AppSelectors.AuthSelectors.selectIsAuthenticated),
-    { initialValue: false },
-  );
-
-  login(): void {
-    this.kc.login().catch((err) => {
-      console.error('[AUTH] Login failed', err);
-    });
-  }
-
-  logout(): void {
-    this.store.dispatch(AppActions.AuthActions.logout());
-  }
-
-  // ── Theme (internal — reads/writes store) ──────────────────
-  readonly isDark = toSignal(this.store.select(AppSelectors.ThemeSelectors.selectIsDark), {
-    initialValue: false,
-  });
-
-  toggleTheme(): void {
-    this.store.dispatch(
-      AppActions.ThemeActions.setTheme({ mode: this.isDark() ? 'light' : 'dark' }),
-    );
-  }
-
-  // ── Language (internal — reads/writes store + translate) ───
-  @Input() languages: HeaderLanguage[] = [];
-
-  readonly currentLang = toSignal(this.store.select(AppSelectors.LangSelectors.selectLang));
-
-  switchLang(code: string): void {
-    this.store.dispatch(AppActions.LangActions.setLang({ lang: code as any }));
-    this.translate.use(code);
-  }
-
-  // ═══════════════════════════════════════════════════════════
-  // NORMAL VARIANT INPUTS
-  // ═══════════════════════════════════════════════════════════
-
+  // -- Content --
+  @Input() title: string | null = null;
+  @Input() breadcrumbItems: BreadcrumbItem[] | null = null;
   @Input() navLinks: HeaderNavLink[] = [];
-  @Input() langTooltip = 'header.lang.tooltip';
-  @Input() langAriaLabel = 'header.lang.select';
-  @Input() langMenuAriaLabel = 'header.lang.menu';
+  @Input() scrolled = false;
+
+  // -- Logo --
+  @Input() logoData: HeaderLogo | null = null;
+
+  // -- Aria --
   @Input() navAriaLabel = 'header.nav.primary';
   @Input() navToggleAriaLabel = 'header.nav.toggle';
   @Input() navMobileAriaLabel = 'header.nav.mobile';
-  @Input() themeToLightAriaLabel = 'header.theme.toLight';
-  @Input() themeToDarkAriaLabel = 'header.theme.toDark';
-  @Input() scrollThreshold = 60;
+
+  // -- Outputs --
+  @Output() menuToggle = new EventEmitter<void>();
   @Output() navLinkClick = new EventEmitter<string>();
 
-  @ContentChild('headerActions') actionsTemplate?: TemplateRef<unknown>;
-
-  // ═══════════════════════════════════════════════════════════
-  // APP VARIANT INPUTS
-  // ═══════════════════════════════════════════════════════════
-
-  @Input() title = '';
-  @Input() breadcrumbItems: BreadcrumbItem[] | null = null;
-  @Input() scrolled = false;
-  @Output() menuToggle = new EventEmitter<void>();
-
+  // -- Toolbar actions (all buttons come from here) --
   readonly toolbarActions$ = inject(ToolbarActionsService).actions$;
 
-  // ═══════════════════════════════════════════════════════════
-  // INTERNAL STATE (normal variant only)
-  // ═══════════════════════════════════════════════════════════
-
+  // -- Internal state --
   readonly isScrolled = signal(false);
   readonly menuOpen = signal(false);
   readonly activeMegaMenu = signal<number | null>(null);
   readonly expandedGroups = signal<Set<number>>(new Set());
 
-  @HostListener('window:scroll')
-  onScroll(): void {
-    if (this.variant !== 'normal') return;
-    this.isScrolled.set(window.scrollY > this.scrollThreshold);
-  }
-
-  async onNavClick(link: HeaderNavLink): Promise<void> {
-    try {
-      if (link.url) {
-        if (link.url.startsWith('http')) {
-          window.open(link.url, '_blank', 'noopener');
-        } else {
-          const success = await this.router.navigateByUrl(link.url);
-          if (!success) {
-            console.error('[HEADER_REDIRECT] - navigation failed');
-          }
-        }
-      } else {
-        this.navLinkClick.emit(link.target ?? link.label);
-      }
-    } finally {
-      this.menuOpen.set(false);
-    }
-  }
-
+  // -- Nav actions --
   openMegaMenu(index: number): void {
     this.activeMegaMenu.set(index);
   }
@@ -191,17 +95,21 @@ export class HeaderComponent {
 
   toggleMobileGroup(index: number): void {
     this.expandedGroups.update((set) => {
-      const next = new Set(set);
-      if (next.has(index)) {
-        next.delete(index);
-      } else {
-        next.add(index);
-      }
+      const next = new Set<number>();
+      if (!set.has(index)) next.add(index);
       return next;
     });
   }
 
   toggleMobileMenu(): void {
     this.menuOpen.update((v) => !v);
+  }
+
+  scrollToSection(event: Event, target: string) {
+    event.preventDefault();
+    const el = document.getElementById(target);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
   }
 }

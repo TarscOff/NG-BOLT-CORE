@@ -30,6 +30,18 @@
   overflow: auto;
 }
 
+// When sidenav is hidden
+:host-context(.app-layout--no-sidenav) {
+  .app-content {
+    padding: 0;
+    height: 100%;
+  }
+  mat-sidenav-content {
+    height: 100vh;
+    overflow-y: auto;
+  }
+}
+
 main {
   // Make scrollbar more visible
   &::-webkit-scrollbar {

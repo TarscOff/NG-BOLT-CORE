@@ -1,57 +1,91 @@
 <!-- ═══════════════════════════════════════════════════════════
-     HEADER — normal variant (landing / public pages)
+     HEADER — Single mat-toolbar
+     All buttons come from ToolbarActionsService.
 ════════════════════════════════════════════════════════════ -->
-@if (variant === 'normal') {
-  <header
-    class="header"
-    [class.header--normal]="true"
-    [class.header--scrolled]="isScrolled()"
-    [class.header--menu-open]="menuOpen()"
-    role="banner"
-  >
-    <div class="header-inner">
-      <!-- Logo -->
-      <a class="header-logo" [href]="logoHref" [attr.aria-label]="logoAlt + ' — Home'">
-        <img [src]="logoSrc" [alt]="logoAlt" class="header-logo-img" width="36" height="36" />
-        <span class="header-logo-name" aria-hidden="true">{{ logoName }}</span>
-      </a>
+<mat-toolbar
+  color="primary"
+  [class.scrolled]="scrolled || isScrolled()"
+  [class.header--menu-open]="menuOpen()"
+  role="banner"
+>
+  <!-- Left: sidenav menu toggle -->
+  @if (showMenuButton) {
+    <button mat-icon-button (click)="menuToggle.emit()" aria-label="Toggle sidebar">
+      <mat-icon>menu</mat-icon>
+    </button>
+  }
 
-      <!-- Desktop nav -->
-      <nav class="header-nav" [attr.aria-label]="navAriaLabel | translate" role="menubar">
-        @for (link of navLinks; track link.label; let i = $index) {
-          @if (link.children && link.children.length) {
-            <div
-              class="header-nav-item"
-              (mouseenter)="openMegaMenu(i)"
-              (mouseleave)="closeMegaMenu()"
+  <!-- Logo -->
+  @if (logoData && logoData.logoSrc) {
+    <a
+      class="header-logo"
+      [href]="logoData.logoHref"
+      [attr.aria-label]="logoData.logoAlt + ' — Home'"
+    >
+      <img
+        [src]="logoData.logoSrc"
+        [alt]="logoData.logoAlt"
+        class="header-logo-img"
+        width="36"
+        height="36"
+      />
+      @if (logoData.logoName) {
+        <span class="header-logo-name" aria-hidden="true">{{ logoData.logoName }}</span>
+      }
+    </a>
+  }
+
+  <!-- Title + breadcrumbs 
+-->
+  @if (title) {
+    <div class="title-breadcrumb">
+      <span class="title">{{ title }}</span>
+      @if (breadcrumbItems?.length) {
+        <app-breadcrumb [items]="breadcrumbItems"></app-breadcrumb>
+      }
+    </div>
+  }
+
+  <!-- Desktop nav — only when navLinks are provided -->
+  @if (navLinks.length) {
+    <nav class="header-nav" [attr.aria-label]="navAriaLabel | translate" role="menubar">
+      @for (link of navLinks; track link.label; let i = $index) {
+        @if (link.children && link.children.length) {
+          <div
+            class="header-nav-item"
+            [class.header-nav-item--active]="activeMegaMenu() === i"
+            (mouseenter)="openMegaMenu(i)"
+            (mouseleave)="closeMegaMenu()"
+          >
+            <button
+              class="header-nav-link"
+              role="menuitem"
+              [attr.aria-haspopup]="true"
+              [attr.aria-expanded]="activeMegaMenu() === i"
+              (keydown.enter)="toggleMegaMenu(i)"
+              (keydown.space)="toggleMegaMenu(i); $event.preventDefault()"
+              (keydown.escape)="closeMegaMenu()"
             >
-              <button
-                class="header-nav-link"
-                role="menuitem"
-                [attr.aria-haspopup]="true"
-                [attr.aria-expanded]="activeMegaMenu() === i"
-                (keydown.enter)="toggleMegaMenu(i)"
-                (keydown.space)="toggleMegaMenu(i); $event.preventDefault()"
-                (keydown.escape)="closeMegaMenu()"
+              {{ link.label | translate }}
+              <mat-icon
+                class="header-nav-chevron"
+                [class.header-nav-chevron--open]="activeMegaMenu() === i"
+                >expand_more</mat-icon
               >
-                {{ link.label | translate }}
-                <mat-icon
-                  class="header-nav-chevron"
-                  [class.header-nav-chevron--open]="activeMegaMenu() === i"
-                  >expand_more</mat-icon
-                >
-              </button>
+            </button>
 
-              @if (activeMegaMenu() === i) {
-                <div class="header-mega" [class.header-mega--scrolled]="isScrolled()" role="menu">
-                  <div class="header-mega-inner">
+            @if (activeMegaMenu() === i) {
+              <div class="header-mega" [class.header-mega--scrolled]="isScrolled()" role="menu">
+                <div class="header-mega-inner">
+                  <!-- Links grid -->
+                  <div class="header-mega-links">
                     @for (child of link.children; track child.label) {
                       <a
                         class="header-mega-link"
                         role="menuitem"
-                        [href]="child.url ?? '#' + child.target"
+                        [href]="child.url"
                         [target]="child.isUrlBlank ? '_blank' : '_self'"
-                        [attr.rel]="child.url ? 'noopener noreferrer' : null"
+                        rel="noopener noreferrer"
                         (click)="closeMegaMenu()"
                       >
                         @if (child.icon) {
@@ -61,242 +95,235 @@
                       </a>
                     }
                   </div>
-                </div>
-              }
-            </div>
-          } @else {
-            <a
-              class="header-nav-link"
-              role="menuitem"
-              [href]="link.url ?? '#' + link.target"
-              [target]="link.isUrlBlank ? '_blank' : '_self'"
-              [attr.rel]="link.url ? 'noopener noreferrer' : null"
-              >{{ link.label | translate }}</a
-            >
-          }
-        }
-      </nav>
 
-      <!-- Actions bar (desktop) -->
-      <div class="header-actions">
-        @if (languages.length) {
-          <button
-            mat-icon-button
-            [matMenuTriggerFor]="normalLangMenu"
-            [matTooltip]="langTooltip | translate"
-            [attr.aria-label]="langAriaLabel | translate"
-            class="header-icon-btn"
-          >
-            <mat-icon>language</mat-icon>
-          </button>
-          <mat-menu #normalLangMenu="matMenu" [attr.aria-label]="langMenuAriaLabel | translate">
-            @for (lang of languages; track lang.code) {
-              <button
-                mat-menu-item
-                (click)="switchLang(lang.code)"
-                [attr.aria-current]="currentLang() === lang.code ? 'true' : null"
-              >
-                {{ lang.label }}
-              </button>
-            }
-          </mat-menu>
-        }
-
-        <button
-          mat-icon-button
-          class="header-icon-btn"
-          (click)="toggleTheme()"
-          [attr.aria-label]="(isDark() ? themeToLightAriaLabel : themeToDarkAriaLabel) | translate"
-        >
-          <mat-icon>{{ isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
-        </button>
-
-        <ng-container *ngTemplateOutlet="actionsTemplate"></ng-container>
-      </div>
-
-      <!-- Hamburger (mobile only) -->
-      <button
-        mat-icon-button
-        class="header-hamburger"
-        (click)="toggleMobileMenu()"
-        [attr.aria-expanded]="menuOpen()"
-        aria-controls="header-mobile-menu"
-        [attr.aria-label]="navToggleAriaLabel | translate"
-      >
-        <mat-icon>{{ menuOpen() ? 'close' : 'menu' }}</mat-icon>
-      </button>
-    </div>
-
-    <!-- Mobile nav drawer -->
-    <div
-      id="header-mobile-menu"
-      class="header-mobile"
-      [class.header-mobile--open]="menuOpen()"
-      role="navigation"
-      [attr.aria-hidden]="!menuOpen() || null"
-      [attr.aria-label]="navMobileAriaLabel | translate"
-    >
-      @for (link of navLinks; track link.label; let i = $index) {
-        @if (link.children && link.children.length) {
-          <button
-            class="header-mobile-accordion"
-            [attr.aria-expanded]="expandedGroups().has(i)"
-            (click)="toggleMobileGroup(i)"
-          >
-            @if (link.icon) {
-              <mat-icon>{{ link.icon }}</mat-icon>
-            }
-            <span>{{ link.label | translate }}</span>
-            <mat-icon
-              class="header-mobile-chevron"
-              [class.header-mobile-chevron--open]="expandedGroups().has(i)"
-              >expand_more</mat-icon
-            >
-          </button>
-
-          @if (expandedGroups().has(i)) {
-            <div class="header-mobile-accordion-body" role="group">
-              @for (child of link.children; track child.label) {
-                <a
-                  class="header-mobile-link"
-                  [href]="child.url ?? '#' + child.target"
-                  [target]="child.isUrlBlank ? '_blank' : '_self'"
-                  [attr.rel]="child.url ? 'noopener noreferrer' : null"
-                  (click)="menuOpen.set(false)"
-                >
-                  @if (child.icon) {
-                    <mat-icon>{{ child.icon }}</mat-icon>
+                  <!-- Promo panel (far-right) -->
+                  @if (link.featuredPanel; as panel) {
+                    <a
+                      class="header-mega-panel"
+                      [href]="panel.url"
+                      [target]="panel.isUrlBlank ? '_blank' : '_self'"
+                      [attr.rel]="panel.isUrlBlank ? 'noopener noreferrer' : null"
+                      [attr.aria-label]="panel.title | translate"
+                      (click)="closeMegaMenu()"
+                    >
+                      <div
+                        class="header-mega-panel__bg"
+                        [style.background-image]="'url(' + panel.imageSrc + ')'"
+                      ></div>
+                      <div class="header-mega-panel__overlay"></div>
+                      <div class="header-mega-panel__body">
+                        <span class="header-mega-panel__title">{{ panel.title | translate }}</span>
+                        @if (panel.description) {
+                          <span class="header-mega-panel__desc">{{
+                            panel.description | translate
+                          }}</span>
+                        }
+                        <span class="header-mega-panel__cta"
+                          ><mat-icon>arrow_forward</mat-icon></span
+                        >
+                      </div>
+                    </a>
                   }
-                  {{ child.label | translate }}
-                </a>
-              }
-            </div>
-          }
+                </div>
+              </div>
+            }
+          </div>
         } @else {
           <a
-            class="header-mobile-link"
-            [href]="link.url ?? '#' + link.target"
+            class="header-nav-link"
+            role="menuitem"
+            [href]="link.url || (link.target ? '#' + link.target : null)"
             [target]="link.isUrlBlank ? '_blank' : '_self'"
-            [attr.rel]="link.url ? 'noopener noreferrer' : null"
-            (click)="menuOpen.set(false)"
+            [attr.rel]="link.isUrlBlank ? 'noopener noreferrer' : null"
+            (click)="link.target ? scrollToSection($event, link.target) : null"
           >
-            @if (link.icon) {
-              <mat-icon>{{ link.icon }}</mat-icon>
-            }
             {{ link.label | translate }}
           </a>
         }
       }
+    </nav>
+  }
 
-      <!-- Mobile — language & theme controls -->
-      <div class="header-mobile-controls">
-        @if (languages.length) {
-          <div class="header-mobile-lang">
-            @for (lang of languages; track lang.code) {
-              <button
-                class="header-mobile-lang-btn"
-                [class.header-mobile-lang-btn--active]="currentLang() === lang.code"
-                (click)="switchLang(lang.code)"
-                [attr.aria-current]="currentLang() === lang.code ? 'true' : null"
+  <span class="spacer"></span>
+
+  <!-- Desktop toolbar actions added via ToolbarActionsService (hidden on mobile when navLinks present) -->
+  <div class="custom-btns" [class.custom-btns--has-nav]="navLinks.length">
+    @for (a of (toolbarActions$ | async) ?? []; track a.id) {
+      @if ((a.visible$ | async) !== false) {
+        @if ((a.variant ?? 'icon') === 'icon') {
+          <button
+            mat-icon-button
+            [color]="a.color || 'primary'"
+            [class]="a.class || ''"
+            [matTooltip]="a.tooltip || '' | translate"
+            [disabled]="a.disabled$ | async"
+            (click)="a.click()"
+          >
+            <mat-icon [color]="a.color || 'primary'" [class]="a.class || ''">{{ a.icon }}</mat-icon>
+          </button>
+        } @else if (a.variant === 'stroked') {
+          <button
+            mat-stroked-button
+            [color]="a.color || 'primary'"
+            [class]="a.class || ''"
+            [matTooltip]="a.tooltip || '' | translate"
+            [disabled]="a.disabled$ | async"
+            (click)="a.click()"
+          >
+            @if (a.icon) {
+              <mat-icon>{{ a.icon }}</mat-icon>
+            }
+            {{ a.label | translate }}
+          </button>
+        } @else if (a.variant === 'raised') {
+          <button
+            mat-raised-button
+            [color]="a.color || 'primary'"
+            [class]="a.class || ''"
+            [matTooltip]="a.tooltip || '' | translate"
+            [disabled]="a.disabled$ | async"
+            (click)="a.click()"
+          >
+            @if (a.icon) {
+              <mat-icon>{{ a.icon }}</mat-icon>
+            }
+            {{ a.label | translate }}
+          </button>
+        } @else {
+          <button
+            mat-flat-button
+            [color]="a.color || 'primary'"
+            [class]="a.class || ''"
+            [matTooltip]="a.tooltip || '' | translate"
+            [disabled]="a.disabled$ | async"
+            (click)="a.click()"
+          >
+            @if (a.icon) {
+              <mat-icon>{{ a.icon }}</mat-icon>
+            }
+            {{ a.label | translate }}
+          </button>
+        }
+      }
+    }
+  </div>
+
+  <!-- Hamburger for mobile nav drawer (only when navLinks provided) -->
+  @if (navLinks.length) {
+    <button
+      mat-icon-button
+      class="header-hamburger"
+      (click)="toggleMobileMenu()"
+      [attr.aria-expanded]="menuOpen()"
+      aria-controls="header-mobile-menu"
+      [attr.aria-label]="navToggleAriaLabel | translate"
+    >
+      <mat-icon>{{ menuOpen() ? 'close' : 'menu' }}</mat-icon>
+    </button>
+  }
+</mat-toolbar>
+
+<!-- Mobile nav drawer — outside toolbar -->
+@if (navLinks.length) {
+  <div
+    id="header-mobile-menu"
+    class="header-mobile"
+    [class.header-mobile--open]="menuOpen()"
+    role="navigation"
+    [attr.aria-hidden]="!menuOpen() || null"
+    [attr.aria-label]="navMobileAriaLabel | translate"
+  >
+    @for (link of navLinks; track link.label; let i = $index) {
+      @if (link.children && link.children.length) {
+        <button
+          class="header-mobile-accordion"
+          [attr.aria-expanded]="expandedGroups().has(i)"
+          (click)="toggleMobileGroup(i)"
+        >
+          @if (link.icon) {
+            <mat-icon>{{ link.icon }}</mat-icon>
+          }
+          <span>{{ link.label | translate }}</span>
+          <mat-icon
+            class="header-mobile-chevron"
+            [class.header-mobile-chevron--open]="expandedGroups().has(i)"
+            >expand_more</mat-icon
+          >
+        </button>
+
+        @if (expandedGroups().has(i)) {
+          <div class="header-mobile-accordion-body" role="group">
+            @for (child of link.children; track child.label) {
+              <a
+                class="header-mobile-link"
+                [href]="link.url || (link.target ? '#' + link.target : null)"
+                [target]="link.isUrlBlank ? '_blank' : '_self'"
+                [attr.rel]="link.isUrlBlank ? 'noopener noreferrer' : null"
+                (click)="link.target ? scrollToSection($event, link.target) : menuOpen.set(false)"
               >
-                {{ lang.label }}
-              </button>
+                @if (child.icon) {
+                  <mat-icon>{{ child.icon }}</mat-icon>
+                }
+                {{ child.label | translate }}
+              </a>
+            }
+
+            <!-- Mobile featured panel card -->
+            @if (link.featuredPanel; as panel) {
+              <a
+                class="header-mobile-panel"
+                [href]="panel.url"
+                [target]="panel.isUrlBlank ? '_blank' : '_self'"
+                [attr.rel]="panel.isUrlBlank ? 'noopener noreferrer' : null"
+                (click)="menuOpen.set(false)"
+              >
+                <div
+                  class="header-mobile-panel__img"
+                  [style.background-image]="'url(' + panel.imageSrc + ')'"
+                >
+                  <div class="header-mobile-panel__overlay"></div>
+                  <div class="header-mobile-panel__caption">
+                    <span class="header-mobile-panel__title">{{ panel.title | translate }}</span>
+                    @if (panel.description) {
+                      <span class="header-mobile-panel__desc">{{
+                        panel.description | translate
+                      }}</span>
+                    }
+                    <span class="header-mobile-panel__cta"><mat-icon>arrow_forward</mat-icon></span>
+                  </div>
+                </div>
+              </a>
             }
           </div>
         }
-
-        <button
-          mat-icon-button
-          class="header-icon-btn"
-          (click)="toggleTheme()"
-          [attr.aria-label]="(isDark() ? themeToLightAriaLabel : themeToDarkAriaLabel) | translate"
+      } @else {
+        <a
+          class="header-mobile-link"
+          [href]="link.url || (link.target ? '#' + link.target : null)"
+          [target]="link.isUrlBlank ? '_blank' : '_self'"
+          [attr.rel]="link.isUrlBlank ? 'noopener noreferrer' : null"
+          (click)="link.target ? scrollToSection($event, link.target) : menuOpen.set(false)"
         >
-          <mat-icon>{{ isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
-        </button>
-      </div>
+          @if (link.icon) {
+            <mat-icon>{{ link.icon }}</mat-icon>
+          }
+          {{ link.label | translate }}
+        </a>
+      }
+    }
 
-      <ng-container *ngTemplateOutlet="actionsTemplate"></ng-container>
-    </div>
-  </header>
-}
-
-<!-- ═══════════════════════════════════════════════════════════
-     HEADER — app variant for layout component
-════════════════════════════════════════════════════════════ -->
-@if (variant === 'app') {
-  <mat-toolbar color="primary" [class.scrolled]="scrolled">
-    <button mat-icon-button (click)="menuToggle.emit()">
-      <mat-icon>menu</mat-icon>
-    </button>
-
-    <div class="title-breadcrumb">
-      <span class="title">{{ title }}</span>
-      <app-breadcrumb [items]="breadcrumbItems"></app-breadcrumb>
-    </div>
-
-    <span class="spacer"></span>
-
-    <div class="custom-btns">
+    <!-- Mobile drawer footer: toolbar actions -->
+    <div class="header-mobile-footer">
       @for (a of (toolbarActions$ | async) ?? []; track a.id) {
         @if ((a.visible$ | async) !== false) {
           @if ((a.variant ?? 'icon') === 'icon') {
-            <button
-              mat-icon-button
-              [color]="a.color || 'primary'"
-              [class]="a.class || ''"
-              [matTooltip]="a.tooltip || '' | translate"
-              [disabled]="a.disabled$ | async"
-              (click)="a.click()"
-            >
-              <mat-icon [color]="a.color || 'primary'" [class]="a.class || ''">{{
-                a.icon
-              }}</mat-icon>
-            </button>
-          } @else if (a.variant === 'stroked') {
-            <button
-              mat-stroked-button
-              [color]="a.color || 'primary'"
-              [class]="a.class || ''"
-              [matTooltip]="a.tooltip || '' | translate"
-              [disabled]="a.disabled$ | async"
-              (click)="a.click()"
-            >
-              @if (a.icon) {
-                <mat-icon [color]="a.color || 'primary'" [class]="a.class || ''">{{
-                  a.icon
-                }}</mat-icon>
-              }
-              {{ a.label | translate }}
-            </button>
-          } @else if (a.variant === 'raised') {
-            <button
-              mat-raised-button
-              [color]="a.color || 'primary'"
-              [class]="a.class || ''"
-              [matTooltip]="a.tooltip || '' | translate"
-              [disabled]="a.disabled$ | async"
-              (click)="a.click()"
-            >
-              @if (a.icon) {
-                <mat-icon [color]="a.color || 'primary'" [class]="a.class || ''">{{
-                  a.icon
-                }}</mat-icon>
-              }
-              {{ a.label | translate }}
+            <button mat-icon-button [color]="a.color || 'primary'" (click)="a.click()">
+              <mat-icon>{{ a.icon }}</mat-icon>
             </button>
           } @else {
-            <button
-              mat-flat-button
-              [color]="a.color || 'primary'"
-              [class]="a.class || ''"
-              [matTooltip]="a.tooltip || '' | translate"
-              [disabled]="a.disabled$ | async"
-              (click)="a.click()"
-            >
+            <button mat-stroked-button [color]="a.color || 'primary'" (click)="a.click()">
               @if (a.icon) {
-                <mat-icon [color]="a.color || 'primary'" [class]="a.class || ''">{{
-                  a.icon
-                }}</mat-icon>
+                <mat-icon>{{ a.icon }}</mat-icon>
               }
               {{ a.label | translate }}
             </button>
@@ -304,5 +331,5 @@
         }
       }
     </div>
-  </mat-toolbar>
+  </div>
 }
