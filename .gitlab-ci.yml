@@ -214,11 +214,10 @@ tag_on_release:
 
       git remote set-url origin "https://oauth2:${GITLAB_TAG_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
       git fetch origin "$CI_COMMIT_BRANCH" --tags --force
-      git checkout "origin/${CI_COMMIT_BRANCH}"
 
       test -f "$PKG_PATH" || { echo "Cannot find $PKG_PATH"; exit 1; }
 
-      VERSION=$(node -p "require('./' + process.env.PKG_PATH).version")
+      VERSION=$(git show "origin/${CI_COMMIT_BRANCH}:${PKG_PATH}" | node -e "let data=''; process.stdin.on('data', c => data += c); process.stdin.on('end', () => console.log(JSON.parse(data).version));")
       TAG="PXS-NG-CORE@${VERSION}"
 
       echo "Detected version: $VERSION"
@@ -231,7 +230,7 @@ tag_on_release:
         exit 0
       fi
 
-      git tag -a "$TAG" -m "release: $TAG"
+      git tag -a "$TAG" "origin/${CI_COMMIT_BRANCH}" -m "release: $TAG"
       git push origin "$TAG"
   variables:
     PKG_PATH: "projects/core/package.json"
