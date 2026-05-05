@@ -419,6 +419,11 @@ On Windows PowerShell:
 or
 
 $env:NPM_TOKEN="<token-created-in-the-SDK-project>"
+
+also do these in powershell
+
+npm config set proxy http://proxy.tango.lu:80                         
+npm config set https-proxy http://proxy.tango.lu:80  
 ```
 
 Then close and reopen the terminal, verify the variable, and install:
