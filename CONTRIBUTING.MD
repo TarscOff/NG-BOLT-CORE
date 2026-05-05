@@ -416,6 +416,9 @@ On Windows PowerShell:
 
 ```powershell
 [Environment]::SetEnvironmentVariable("NPM_TOKEN", "<token-created-in-the-SDK-project>", "User")
+or
+
+$env:NPM_TOKEN="<token-created-in-the-SDK-project>"
 ```
 
 Then close and reopen the terminal, verify the variable, and install:
