@@ -313,7 +313,128 @@ Before publishing, CI checks if `@cadai/pxs-ng-core@<version>` already exists in
 
 ## 10. 📥 Consuming the Package (Host Apps)
 
-Add the GitLab Package Registry in your **Host** project:
+Host applications consume `@cadai/pxs-ng-core` from the SDK project's GitLab Package Registry. The SDK registry is private, so every consumer needs a read token for installs.
+
+### Consumer `.npmrc`
+
+Commit this `.npmrc` in each consuming application:
+
+```npmrc
+# Default public registry
+registry=https://registry.npmjs.org/
+
+# Core SDK GitLab Package Registry
+@cadai:registry=https://teamhub-se.telindus.lu/api/v4/projects/281/packages/npm/
+//teamhub-se.telindus.lu/api/v4/projects/281/packages/npm/:_authToken=${NPM_TOKEN}
+always-auth=true
+```
+
+Do not replace `${NPM_TOKEN}` with a real token in the repository. The committed file must stay generic and safe to share.
+
+The project id in this URL is the GitLab project id of the SDK package registry. For this SDK, use:
+
+```text
+281
+```
+
+Do not use `frontend-angular-core-sdk` in the npm registry URL. The numeric project id is the reliable GitLab npm registry endpoint.
+
+### Token creation
+
+Create the read token in the **SDK project**, because that is where the package is published.
+
+Recommended token:
+
+- Type: GitLab Project Access Token or Deploy Token
+- Scope: `read_package_registry`
+- Role: `Reporter` is enough for read-only package installation
+- Expiration: prefer an explicit expiration date if your GitLab policy allows it
+
+The token value is copied once when GitLab creates it. Store it immediately in the consumer application CI/CD variables and, if needed, in local developer environments.
+
+### Consumer CI/CD variable
+
+In every consuming GitLab project, add this CI/CD variable:
+
+```text
+Key: NPM_TOKEN
+Value: <token-created-in-the-SDK-project>
+```
+
+Recommended settings:
+
+- `Masked`: enabled
+- `Protected`: enable only if the consuming pipeline runs on protected branches
+
+If the pipeline runs on `develop` and `develop` is not protected, a protected `NPM_TOKEN` will not be injected and `npm ci` will fail.
+
+### Consumer GitLab CI
+
+Before every `npm ci`, verify that `NPM_TOKEN` is available:
+
+```yaml
+before_script:
+  - node --version
+  - npm --version
+  - |
+    if [ -z "${NPM_TOKEN:-}" ]; then
+      echo "ERROR: NPM_TOKEN is required to install @cadai packages from GitLab Package Registry."
+      exit 1
+    fi
+```
+
+If the consumer project does not commit the `.npmrc`, the pipeline must generate it before `npm ci`:
+
+```yaml
+before_script:
+  - node --version
+  - npm --version
+  - |
+    set -euo pipefail
+
+    if [ -z "${NPM_TOKEN:-}" ]; then
+      echo "ERROR: NPM_TOKEN is required to install @cadai packages from GitLab Package Registry."
+      exit 1
+    fi
+
+    {
+      echo "registry=https://registry.npmjs.org/"
+      echo ""
+      echo "@cadai:registry=https://teamhub-se.telindus.lu/api/v4/projects/281/packages/npm/"
+      echo "//teamhub-se.telindus.lu/api/v4/projects/281/packages/npm/:_authToken=${NPM_TOKEN}"
+      echo "always-auth=true"
+    } > .npmrc
+```
+
+The preferred approach is to commit the generic `.npmrc` and only keep `NPM_TOKEN` as a secret variable.
+
+### Local developer setup
+
+GitLab CI/CD variables are not available on a developer machine. After cloning a consuming application, developers must define `NPM_TOKEN` locally before running `npm install`.
+
+On Windows PowerShell:
+
+```powershell
+[Environment]::SetEnvironmentVariable("NPM_TOKEN", "<token-created-in-the-SDK-project>", "User")
+```
+
+Then close and reopen the terminal, verify the variable, and install:
+
+```powershell
+echo $env:NPM_TOKEN
+npm install
+```
+
+On Linux/macOS:
+
+```bash
+export NPM_TOKEN="<token-created-in-the-SDK-project>"
+npm install
+```
+
+For a permanent Linux/macOS setup, add the export to the user's shell profile.
+
+### Generic template
 
 ```npmrc
 @cadai:registry=https://<gitlab-host>/api/v4/projects/<project-id>/packages/npm/
@@ -321,15 +442,19 @@ Add the GitLab Package Registry in your **Host** project:
 always-auth=true
 ```
 
-For local development, `NPM_TOKEN` should be a GitLab Deploy Token or Personal Access Token with `read_package_registry`.
+For local development, `NPM_TOKEN` should be a GitLab Deploy Token, Project Access Token, or Personal Access Token with `read_package_registry`.
 
-For another GitLab CI project, use a masked CI/CD variable or a Deploy Token with `read_package_registry`. If cross-project `CI_JOB_TOKEN` access is enabled, the host project can use:
+For another GitLab CI project, use a masked CI/CD variable or a Deploy Token with `read_package_registry`.
+
+If cross-project `CI_JOB_TOKEN` access is enabled in GitLab, the host project can use:
 
 ```npmrc
 @cadai:registry=https://<gitlab-host>/api/v4/projects/<project-id>/packages/npm/
 //<gitlab-host>/api/v4/projects/<project-id>/packages/npm/:_authToken=${CI_JOB_TOKEN}
 always-auth=true
 ```
+
+This is CI-only. It does not solve local `npm install` for developers, so `NPM_TOKEN` remains the recommended convention for host apps.
 
 Install:
 ```bash
