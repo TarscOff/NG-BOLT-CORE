@@ -35,7 +35,7 @@ build_test:
   stage: build_test
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH =~ /^(main|master|develop)$/'
+    - if: '$CI_COMMIT_BRANCH'
     - if: '$CI_PIPELINE_SOURCE == "web"'
   script:
     - npm ci --cache .npm --prefer-offline
@@ -49,13 +49,6 @@ version_bump:
       artifacts: false
   rules:
     - if: '$CI_COMMIT_BRANCH =~ /^(main|master)$/ && $CI_PIPELINE_SOURCE == "push"'
-      changes:
-        - projects/core/**/*
-        - projects/**/*
-        - package.json
-        - package-lock.json
-        - tsconfig*.json
-        - .gitlab-ci.yml
   before_script:
     - node --version
     - npm --version
@@ -104,13 +97,6 @@ release_build:
       artifacts: true
   rules:
     - if: '$CI_COMMIT_BRANCH =~ /^(main|master)$/ && $CI_PIPELINE_SOURCE == "push"'
-      changes:
-        - projects/core/**/*
-        - projects/**/*
-        - package.json
-        - package-lock.json
-        - tsconfig*.json
-        - .gitlab-ci.yml
   script:
     - npm ci --cache .npm --prefer-offline
     - npm run build:core
@@ -127,13 +113,6 @@ publish:
       artifacts: true
   rules:
     - if: '$CI_COMMIT_BRANCH =~ /^(main|master)$/ && $CI_PIPELINE_SOURCE == "push"'
-      changes:
-        - projects/core/**/*
-        - projects/**/*
-        - package.json
-        - package-lock.json
-        - tsconfig*.json
-        - .gitlab-ci.yml
   script:
     - |
       set -euo pipefail
@@ -176,13 +155,6 @@ tag_on_release:
     - job: publish
   rules:
     - if: '$CI_COMMIT_BRANCH =~ /^(main|master)$/ && $CI_PIPELINE_SOURCE == "push"'
-      changes:
-        - projects/core/**/*
-        - projects/**/*
-        - package.json
-        - package-lock.json
-        - tsconfig*.json
-        - .gitlab-ci.yml
   before_script:
     - node --version
     - git --version
