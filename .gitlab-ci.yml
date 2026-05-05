@@ -1,6 +1,7 @@
 stages:
-  - version
   - build_test
+  - version
+  - release_build
   - publish
   - tag
 
@@ -30,8 +31,36 @@ workflow:
     - if: '$CI_COMMIT_BRANCH'
     - if: '$CI_PIPELINE_SOURCE == "web"'
 
+build_test:
+  stage: build_test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - projects/core/**/*
+        - projects/**/*
+        - package.json
+        - package-lock.json
+        - tsconfig*.json
+        - .gitlab-ci.yml
+    - if: '$CI_COMMIT_BRANCH =~ /^(main|master|develop)$/'
+      changes:
+        - projects/core/**/*
+        - projects/**/*
+        - package.json
+        - package-lock.json
+        - tsconfig*.json
+        - .gitlab-ci.yml
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+  script:
+    - npm ci --cache .npm --prefer-offline
+    - npm run lint:ci
+    - npm run build:core
+
 version_bump:
   stage: version
+  needs:
+    - job: build_test
+      artifacts: false
   rules:
     - if: '$CI_COMMIT_BRANCH =~ /^(main|master)$/ && $CI_PIPELINE_SOURCE == "push"'
       changes:
@@ -82,14 +111,13 @@ version_bump:
       - ${PROJECT_DIR}/package.json
     expire_in: 7 days
 
-build_test:
-  stage: build_test
+release_build:
+  stage: release_build
   needs:
     - job: version_bump
       artifacts: true
-      optional: true
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH =~ /^(main|master)$/ && $CI_PIPELINE_SOURCE == "push"'
       changes:
         - projects/core/**/*
         - projects/**/*
@@ -97,18 +125,8 @@ build_test:
         - package-lock.json
         - tsconfig*.json
         - .gitlab-ci.yml
-    - if: '$CI_COMMIT_BRANCH =~ /^(main|master|develop)$/'
-      changes:
-        - projects/core/**/*
-        - projects/**/*
-        - package.json
-        - package-lock.json
-        - tsconfig*.json
-        - .gitlab-ci.yml
-    - if: '$CI_PIPELINE_SOURCE == "web"'
   script:
     - npm ci --cache .npm --prefer-offline
-    - npm run lint:ci
     - npm run build:core
   artifacts:
     name: pxs-ng-core
@@ -119,7 +137,7 @@ build_test:
 publish:
   stage: publish
   needs:
-    - job: build_test
+    - job: release_build
       artifacts: true
   rules:
     - if: '$CI_COMMIT_BRANCH =~ /^(main|master)$/ && $CI_PIPELINE_SOURCE == "push"'

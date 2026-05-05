@@ -268,9 +268,10 @@ This document explains **how CI/CD works** for the Core SDK and **what contribut
 
 | Stage            | When it runs                                   | What it does                                                                                                                                              |
 |------------------|------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Version bump** | **Only** on `main` or `master` release pushes  | Runs `npm version <RELEASE_BUMP> --prefix projects/core --no-git-tag-version`, commits the bumped `projects/core/package.json`, and pushes it with `[skip ci]`. |
 | **Build & Test** | On any commit/PR that matches the path filters | Uses Node `20.x`, `npm ci`, runs `npm run lint:ci`, builds the library (`npm run build:core`). Publishes `dist/core` as artifact `pxs-ng-core`.          |
-| **Publish**      | **Only** on `main` or `master` after build     | Publishes `dist/core` to the GitLab Package Registry using `CI_JOB_TOKEN`. Skips if the version already exists; otherwise publishes.                     |
+| **Version bump** | **Only** on `main` or `master` after Build & Test | Runs `npm version <RELEASE_BUMP> --prefix projects/core --no-git-tag-version`, commits the bumped `projects/core/package.json`, and pushes it with `[skip ci]`. |
+| **Release build** | **Only** on `main` or `master` after Version bump | Rebuilds the library from the bumped `projects/core/package.json`, so the package artifact contains the release version. |
+| **Publish**      | **Only** on `main` or `master` after Release build | Publishes `dist/core` to the GitLab Package Registry using `CI_JOB_TOKEN`. Skips if the version already exists; otherwise publishes.                     |
 | **Tag**          | **Only** on `main` or `master` after publish   | Reads the bumped version from `projects/core/package.json`, creates git tag `PXS-NG-CORE@<version>` and pushes it to origin using `GITLAB_TAG_TOKEN`.    |
 
 ### Environments / Variables
