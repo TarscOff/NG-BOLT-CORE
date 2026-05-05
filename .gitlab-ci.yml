@@ -1,0 +1,219 @@
+stages:
+  - version
+  - build_test
+  - publish
+  - tag
+
+variables:
+  NODE_VERSION: "20"
+  PROJECT_DIR: "projects/core"
+  DIST_DIR: "dist/core"
+  NPM_SCOPE: "cadai"
+  NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/.npm"
+  RELEASE_BUMP: "patch"
+
+default:
+  image: node:${NODE_VERSION}
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - .npm/
+  before_script:
+    - node --version
+    - npm --version
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+
+version_bump:
+  stage: version
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^(main|master)$/ && $CI_PIPELINE_SOURCE == "push"'
+      changes:
+        - projects/core/**/*
+        - projects/**/*
+        - package.json
+        - package-lock.json
+        - tsconfig*.json
+        - .gitlab-ci.yml
+  before_script:
+    - node --version
+    - npm --version
+    - git --version
+  script:
+    - |
+      set -euo pipefail
+
+      if [ -z "${GITLAB_TAG_TOKEN:-}" ]; then
+        echo "GITLAB_TAG_TOKEN is required. Store a masked Project Access Token with write_repository permission."
+        exit 1
+      fi
+
+      case "$RELEASE_BUMP" in
+        patch|minor|major|prepatch|preminor|premajor|prerelease) ;;
+        *)
+          echo "Invalid RELEASE_BUMP '$RELEASE_BUMP'. Use patch, minor, major, prepatch, preminor, premajor or prerelease."
+          exit 1
+          ;;
+      esac
+
+      git config user.email "gitlab-ci@local"
+      git config user.name "GitLab CI"
+
+      BEFORE_VERSION=$(node -p "require('./${PROJECT_DIR}/package.json').version")
+      npm version "$RELEASE_BUMP" --prefix "$PROJECT_DIR" --no-git-tag-version
+      AFTER_VERSION=$(node -p "require('./${PROJECT_DIR}/package.json').version")
+
+      echo "Bumped ${PROJECT_DIR}/package.json from ${BEFORE_VERSION} to ${AFTER_VERSION}"
+
+      git add "${PROJECT_DIR}/package.json"
+      git commit -m "chore(release): bump ${AFTER_VERSION} [skip ci]"
+
+      git remote set-url origin "https://oauth2:${GITLAB_TAG_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
+      git push origin "HEAD:${CI_COMMIT_BRANCH}"
+  artifacts:
+    name: version-bump
+    paths:
+      - ${PROJECT_DIR}/package.json
+    expire_in: 7 days
+
+build_test:
+  stage: build_test
+  needs:
+    - job: version_bump
+      artifacts: true
+      optional: true
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - projects/core/**/*
+        - projects/**/*
+        - package.json
+        - package-lock.json
+        - tsconfig*.json
+        - .gitlab-ci.yml
+    - if: '$CI_COMMIT_BRANCH =~ /^(main|master|develop)$/'
+      changes:
+        - projects/core/**/*
+        - projects/**/*
+        - package.json
+        - package-lock.json
+        - tsconfig*.json
+        - .gitlab-ci.yml
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+  script:
+    - npm ci --cache .npm --prefer-offline
+    - npm run lint:ci
+    - npm run build:core
+  artifacts:
+    name: pxs-ng-core
+    paths:
+      - ${DIST_DIR}/
+    expire_in: 7 days
+
+publish:
+  stage: publish
+  needs:
+    - job: build_test
+      artifacts: true
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^(main|master)$/ && $CI_PIPELINE_SOURCE == "push"'
+      changes:
+        - projects/core/**/*
+        - projects/**/*
+        - package.json
+        - package-lock.json
+        - tsconfig*.json
+        - .gitlab-ci.yml
+  script:
+    - |
+      set -euo pipefail
+
+      PKG_DIR="${DIST_DIR}"
+      PKG_JSON="${PKG_DIR}/package.json"
+      test -f "$PKG_JSON" || { echo "package.json not found in $PKG_DIR"; exit 1; }
+
+      GITLAB_NPM_REGISTRY="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/npm/"
+      GITLAB_NPM_AUTH_HOST="${CI_API_V4_URL#https://}/projects/${CI_PROJECT_ID}/packages/npm/"
+
+      {
+        printf '@%s:registry=%s\n' "$NPM_SCOPE" "$GITLAB_NPM_REGISTRY"
+        printf 'always-auth=true\n'
+        printf '//%s:_authToken=%s\n' "$GITLAB_NPM_AUTH_HOST" "$CI_JOB_TOKEN"
+      } > "${PKG_DIR}/.npmrc"
+
+      PKG_NAME=$(node -p "require('./' + process.env.PKG_JSON).name")
+      PKG_VER=$(node -p "require('./' + process.env.PKG_JSON).version")
+
+      echo "Publishing ${PKG_NAME}@${PKG_VER}"
+
+      cd "$PKG_DIR"
+
+      if npm view "${PKG_NAME}@${PKG_VER}" version --registry "$GITLAB_NPM_REGISTRY" >/dev/null 2>&1; then
+        echo "Version already exists in the GitLab Package Registry. Skipping publish."
+        exit 0
+      fi
+
+      npm config set ignore-scripts true
+      npm publish --ignore-scripts --registry "$GITLAB_NPM_REGISTRY"
+  variables:
+    PKG_JSON: "${DIST_DIR}/package.json"
+
+tag_on_release:
+  stage: tag
+  needs:
+    - job: version_bump
+      artifacts: true
+    - job: publish
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^(main|master)$/ && $CI_PIPELINE_SOURCE == "push"'
+      changes:
+        - projects/core/**/*
+        - projects/**/*
+        - package.json
+        - package-lock.json
+        - tsconfig*.json
+        - .gitlab-ci.yml
+  before_script:
+    - node --version
+    - git --version
+  script:
+    - |
+      set -euo pipefail
+
+      if [ -z "${GITLAB_TAG_TOKEN:-}" ]; then
+        echo "GITLAB_TAG_TOKEN is required. Store a masked Project Access Token with write_repository permission."
+        exit 1
+      fi
+
+      git config user.email "gitlab-ci@local"
+      git config user.name "GitLab CI"
+
+      git remote set-url origin "https://oauth2:${GITLAB_TAG_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
+      git fetch origin "$CI_COMMIT_BRANCH" --tags --force
+      git checkout "origin/${CI_COMMIT_BRANCH}"
+
+      test -f "$PKG_PATH" || { echo "Cannot find $PKG_PATH"; exit 1; }
+
+      VERSION=$(node -p "require('./' + process.env.PKG_PATH).version")
+      TAG="PXS-NG-CORE@${VERSION}"
+
+      echo "Detected version: $VERSION"
+      echo "Proposed tag:    $TAG"
+
+      git fetch --tags --force
+
+      if git rev-parse "$TAG" >/dev/null 2>&1; then
+        echo "Tag $TAG already exists. Nothing to do."
+        exit 0
+      fi
+
+      git tag -a "$TAG" -m "release: $TAG"
+      git push origin "$TAG"
+  variables:
+    PKG_PATH: "projects/core/package.json"

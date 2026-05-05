@@ -44,9 +44,6 @@
     ]
   },
   "private": false,
-  "publishConfig": {
-    "registry": "https://pkgs.dev.azure.com/cadai/Socle/_packaging/PXS-NG-CORE/npm/registry/"
-  },
   "dependencies": {
     "@angular/animations": "20.1.7",
     "@angular/cdk": "20.1.6",

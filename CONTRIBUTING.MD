@@ -1,7 +1,7 @@
 # 📝 Contributing Guide – `@cadai/pxs-ng-core`
 >_Last updated: 2025-09-04_
 
-Welcome! This document explains how to work with the **PXS-NG-CORE** library: setup, development, versioning, and publishing to our private Azure Artifacts feed.
+Welcome! This document explains how to work with the **PXS-NG-CORE** library: setup, development, versioning, and publishing to the private GitLab Package Registry.
 
 This document is the **source of truth** for how to work in this repository. It explains the folder structure, barrel usage, contribution workflow, and a pre‑push checklist to keep everything aligned.
 
@@ -14,7 +14,8 @@ This document is the **source of truth** for how to work in this repository. It 
   ```bash
   npm install -g @angular/cli
   ```
-- A valid **Azure DevOps Personal Access Token (PAT)** with **Packaging: Read & Write** permissions.
+- For package consumption outside GitLab CI, a GitLab Deploy Token or Personal Access Token with `read_package_registry`.
+- For release tagging in GitLab CI, a masked `GITLAB_TAG_TOKEN` variable backed by a Project Access Token with `write_repository`.
 ---
 
 ## 2. 🛠 Development
@@ -159,7 +160,11 @@ We follow **semantic versioning** (`MAJOR.MINOR.PATCH`):
 - **Minor**: Backward-compatible features → `1.0.0 → 1.1.0`
 - **Major**: Breaking changes → `1.0.0 → 2.0.0`
 
-Bump version inside `projects/core/package.json`:
+For normal releases, do **not** bump the version locally. GitLab CI bumps `projects/core/package.json` before publishing and tagging.
+
+The default CI bump is `patch`. For another release type, set the `RELEASE_BUMP` CI/CD variable to `minor` or `major` before running the release pipeline.
+
+The local scripts still exist for emergency/manual maintenance, but they are not the standard release path:
 
 ```bash
 npm run version:patch   # 1.0.0 → 1.0.1
@@ -220,21 +225,22 @@ Available at the repo root:
 This document explains **how CI/CD works** for the Core SDK and **what contributors must do** to keep builds green and releases smooth.
 
 > **TL;DR**  
-> - Target branches: `develop` (integration), `main|master` (release).  
+> - Target branches: `develop` (integration), `master` (release).  
 > - CI runs **lint + build** on PRs that touch `projects/core/**`.  
-> - Merges into `main` automatically **publish** `@cadai/pxs-ng-core` to Azure Artifacts and **create a git tag** `PXS-NG-CORE@<version>`.  
-> - The **package version is read from** `projects/core/package.json` and must be bumped **before merging** to `main`.
+> - Merges into `main` or `master` automatically **bump the package version**, **publish** `@cadai/pxs-ng-core` to the GitLab Package Registry, and **create a git tag** `PXS-NG-CORE@<version>`.
+> - The CI bumps `projects/core/package.json` before build/publish/tag. Default bump is `patch`.
 
 
 ### How to Release
 
-1. From latest `develop`, bump the version:
+1. From latest `develop`, open a PR: **`develop` → `main`** or **`develop` → `master`**. Wait for **Build & Test** to pass.
 
-2. Open a PR: **`develop` → `main`**. Wait for **Build & Test** to pass.
-
-3. Merge the PR. On `main`:
-   - CI **publishes** to Azure Artifacts (if new version).
-   - CI creates **tag** `PXS-NG-CORE@x.y.z`.
+2. Merge the PR. On `main` or `master`:
+   - CI bumps `projects/core/package.json`.
+   - CI commits the bumped version back to the release branch with `[skip ci]`.
+   - CI builds the library using the bumped version.
+   - CI publishes to GitLab Package Registry if the version does not already exist.
+   - CI creates tag `PXS-NG-CORE@x.y.z`.
 
 ---
 ---
@@ -244,11 +250,11 @@ This document explains **how CI/CD works** for the Core SDK and **what contribut
 - Work on **feature branches** cut from `develop`.
 - Open PRs **into `develop`** for regular work.  
 - When preparing a release:
-  1. Bump version in `projects/core/package.json` (using the `npm run version:patch|minor|major`).
-  2. Merge `develop` → `main` via PR.
+  1. Merge `develop` → `main` or `master` via PR.
+  2. Let CI bump `projects/core/package.json`, publish the package, and create the tag.
 - CI is **triggered only for changes** to:
   - `projects/core/**` (library code),
-  - pipeline files and workspace configs (`azure-pipelines.yml`, `package.json`, `package-lock.json`, `tsconfig*.json`, `projects/**`).
+  - pipeline files and workspace configs (`.gitlab-ci.yml`, `package.json`, `package-lock.json`, `tsconfig*.json`, `projects/**`).
 
 ### Required checks on PRs
 - **ESLint (CI)** must pass.
@@ -258,17 +264,20 @@ This document explains **how CI/CD works** for the Core SDK and **what contribut
 
 ---
 
-## 8. 🚀 CI/CD Overview (Azure Pipelines)
+## 8. 🚀 CI/CD Overview (GitLab CI)
 
 | Stage            | When it runs                                   | What it does                                                                                                                                              |
 |------------------|------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Version bump** | **Only** on `main` or `master` release pushes  | Runs `npm version <RELEASE_BUMP> --prefix projects/core --no-git-tag-version`, commits the bumped `projects/core/package.json`, and pushes it with `[skip ci]`. |
 | **Build & Test** | On any commit/PR that matches the path filters | Uses Node `20.x`, `npm ci`, runs `npm run lint:ci`, builds the library (`npm run build:core`). Publishes `dist/core` as artifact `pxs-ng-core`.          |
-| **Publish**      | **Only** on `main` after a successful build    | Downloads artifact. Creates `.npmrc` for the artifact. Authenticates with **NpmAuthenticate**. Skips if the version already exists; otherwise publishes. |
-| **Tag**          | **Only** on `main` after publish               | Reads version from `projects/core/package.json`, creates git tag `PXS-NG-CORE@<version>` and pushes it to origin.                                         |
+| **Publish**      | **Only** on `main` or `master` after build     | Publishes `dist/core` to the GitLab Package Registry using `CI_JOB_TOKEN`. Skips if the version already exists; otherwise publishes.                     |
+| **Tag**          | **Only** on `main` or `master` after publish   | Reads the bumped version from `projects/core/package.json`, creates git tag `PXS-NG-CORE@<version>` and pushes it to origin using `GITLAB_TAG_TOKEN`.    |
 
 ### Environments / Variables
 - Node version: `20.x`
-- Feed URL: `https://pkgs.dev.azure.com/cadai/Socle/_packaging/PXS-NG-CORE/npm/registry/`
+- Package registry: `${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/npm/`
+- Required CI variable: `GITLAB_TAG_TOKEN` with `write_repository`
+- Release bump type: `RELEASE_BUMP`, default `patch`. Supported values: `patch`, `minor`, `major`, `prepatch`, `preminor`, `premajor`, `prerelease`.
 - Artifact name: `pxs-ng-core`
 - Library paths: `projects/core` → `dist/core`
 
@@ -285,27 +294,39 @@ We follow **Conventional Commits**:
 ## 9. 📝 Publishing Details
 
 ### Authentication
-The pipeline creates a **scoped `.npmrc` inside the artifact directory** and authenticates it with **NpmAuthenticate@0**. This ensures `npm publish` uses the Azure Artifacts feed.
+The pipeline creates a **scoped `.npmrc` inside the artifact directory** and authenticates with GitLab's built-in `CI_JOB_TOKEN`. This ensures `npm publish` uses the current project's GitLab Package Registry.
 
 ### Idempotent publish
-Before publishing, CI checks if `@cadai/pxs-ng-core@<version>` already exists on the feed:
+Before publishing, CI checks if `@cadai/pxs-ng-core@<version>` already exists in the GitLab Package Registry:
 - If **exists** → **skip** publish gracefully.
-- If **not found** → `npm publish --ignore-scripts --registry <FEED_URL>`.
+- If **not found** → `npm publish --ignore-scripts --registry <GITLAB_NPM_REGISTRY>`.
 
 > Lifecycle scripts are disabled for safety during CI publishing.
 
 ### Tagging
-- CI uses `System.AccessToken` to push the tag.  
+- CI uses `GITLAB_TAG_TOKEN` to push the tag.  
 - The tag format is **`PXS-NG-CORE@<version>`**.
+- The tag is created after the CI version bump commit, so the tag points to the committed package version.
 
 ---
 
 ## 10. 📥 Consuming the Package (Host Apps)
 
-Add the Azure Artifacts registry in your **Host** project:
+Add the GitLab Package Registry in your **Host** project:
 
 ```npmrc
-@cadai:registry=https://pkgs.dev.azure.com/cadai/Socle/_packaging/PXS-NG-CORE/npm/registry/
+@cadai:registry=https://<gitlab-host>/api/v4/projects/<project-id>/packages/npm/
+//<gitlab-host>/api/v4/projects/<project-id>/packages/npm/:_authToken=${NPM_TOKEN}
+always-auth=true
+```
+
+For local development, `NPM_TOKEN` should be a GitLab Deploy Token or Personal Access Token with `read_package_registry`.
+
+For another GitLab CI project, use a masked CI/CD variable or a Deploy Token with `read_package_registry`. If cross-project `CI_JOB_TOKEN` access is enabled, the host project can use:
+
+```npmrc
+@cadai:registry=https://<gitlab-host>/api/v4/projects/<project-id>/packages/npm/
+//<gitlab-host>/api/v4/projects/<project-id>/packages/npm/:_authToken=${CI_JOB_TOKEN}
 always-auth=true
 ```
 
@@ -314,15 +335,17 @@ Install:
 npm i @cadai/pxs-ng-core@^<major>.<minor>.<patch>
 ```
 
-Host apps must satisfy the **peer dependencies** (Angular/NgRx/Translate/Keycloak/RxJS).
+Host apps must satisfy the **peer dependencies** (Angular/NgRx/Translate/Keycloak/RxJS/Chart.js/Luxon).
 
 ---
 
 ## 11. 🪲 Troubleshooting
 
-- **Publish skipped**: The exact version already exists. Bump `projects/core/package.json` and retry a `develop → main` merge.
-- **Auth errors (`npm publish`)**: Ensure the pipeline ran **NpmAuthenticate@0** and the `.npmrc` path points to the **file inside the artifact directory**.
-- **Tag push failed**: Confirm the pipeline has **`persistCredentials: true`** on checkout and uses `$(System.AccessToken)`.
+- **Publish skipped**: The exact version already exists. Check the `RELEASE_BUMP` value and retry a `develop → main/master` merge or manual pipeline.
+- **Auth errors (`npm publish`)**: Ensure the package registry is enabled and the job uses the scoped `.npmrc` generated in `dist/core`.
+- **Auth errors (`npm install` in host apps)**: Ensure the token has `read_package_registry` and the `.npmrc` project id points to this SDK project.
+- **Tag push failed**: Confirm `GITLAB_TAG_TOKEN` exists, is masked, and has `write_repository`.
+- **Version bump failed**: Confirm `GITLAB_TAG_TOKEN` can push to the protected `main`/`master` branch, or allow the token identity to push to that branch.
 - **Build fails on missing types**: Ensure the **SDK workspace** has peer packages in **devDependencies** (they are required for type-checking during build). This does not affect published peers.
 
 ---
@@ -331,7 +354,7 @@ Host apps must satisfy the **peer dependencies** (Angular/NgRx/Translate/Keycloa
 
 - Do **not** print tokens or `.npmrc` contents in logs.  
 - Use **`--ignore-scripts`** on `npm publish` in CI to avoid executing arbitrary lifecycle scripts.  
-- Tags are created by CI using a dedicated identity (`Build Bot`).
+- Tags are created by CI using the GitLab token configured in `GITLAB_TAG_TOKEN`.
 
 ---
 
@@ -340,12 +363,12 @@ Host apps must satisfy the **peer dependencies** (Angular/NgRx/Translate/Keycloa
 - [ ] **Build passes**: `npm run build:core`
 - [ ] **Lint passes**: `pnpm lint` (or `npm run lint`)
 - [ ] **No deep relative imports** into `core/shared/features/store` (respect barrel policy)
+- [ ] **Release bump type is correct**: default is `patch`; set `RELEASE_BUMP` for `minor` or `major` releases.
 - [ ] **Barrels updated**: new public APIs re‑exported via `index.ts`
 - [ ] **Store wired**: reducer registered, effects provided, selectors exported
 - [ ] **i18n keys** added/updated
 - [ ] **Types**: no `any`; strict mode friendly
 - [ ] **Changelog/commit messages** follow Conventional Commits
-- [ ] **Version bump** planned if releasing
 
 ---
 
