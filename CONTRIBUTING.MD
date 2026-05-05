@@ -329,6 +329,7 @@ registry=https://registry.npmjs.org/
 always-auth=true
 ```
 
+
 Do not replace `${NPM_TOKEN}` with a real token in the repository. The committed file must stay generic and safe to share.
 
 The project id in this URL is the GitLab project id of the SDK package registry. For this SDK, use:
